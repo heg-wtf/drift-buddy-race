@@ -475,33 +475,9 @@ export const RacingGame = () => {
         </div>
       )}
 
-      {/* Game Over overlay */}
-      {gameOver && !raceFinished && (
-        <div className="absolute inset-0 bg-background/90 backdrop-blur-md flex items-center justify-center z-50">
-          <div className="text-center max-w-md w-full">
-            <h2 className="text-5xl font-bold text-destructive mb-4">차량 파괴!</h2>
-            <p className="text-xl text-muted-foreground mb-4">충돌로 인해 차량이 파괴되었습니다</p>
-            
-            {lapTimes.length > 0 && (
-              <div className="bg-card/80 rounded-xl border border-border p-4 mb-6 text-left">
-                {lapTimes.map((time, i) => (
-                  <div key={i} className="flex justify-between px-3 py-1.5">
-                    <span className="text-sm text-muted-foreground">랩 {i + 1}</span>
-                    <span className="text-sm font-mono font-bold text-foreground">{formatTime(time)}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-            
-            <button 
-              onClick={handleRestart}
-              className="px-8 py-4 bg-primary text-primary-foreground rounded-lg text-xl font-bold hover:opacity-90 transition-opacity pointer-events-auto"
-            >
-              다시 시작
-            </button>
-          </div>
-        </div>
-      )}
+    </div>
+  );
+};
     </div>
   );
 };
