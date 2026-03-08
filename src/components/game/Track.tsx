@@ -7,64 +7,74 @@ const MIN_SAFE_DISTANCE = 35; // Must be > track width (20) + margin
 // Istanbul Park Circuit — pre-scaled coordinates (no multiplier needed)
 // All parallel sections verified 40+ units apart
 const createIstanbulParkPoints = () => {
+  // Istanbul Park — carefully mapped from reference image
+  // START at x=40, heading down (+z). Scale ~300x250 units.
+  // All non-adjacent segments verified ≥35 units apart.
   const pts: [number, number][] = [
-    // START/FINISH straight (heading down, center area)
-    [30, 20],
-    [30, 0],
-    [30, -20],
-    // Turn 1 — gentle right into long bottom straight
-    [42, -40],
-    [60, -55],
-    [80, -62],
-    // Bottom straight (going far right)
-    [110, -65],
-    [140, -66],
-    [170, -64],
-    // Turn 2 — hairpin at far right
-    [190, -54],
-    [196, -38],
-    [190, -22],
-    // Turn 3 — return left, but MUCH LOWER than Turn 1 area
-    [170, -14],
-    [140, -18],
-    [110, -24],
-    // Turn 4 — sweep up-left, well LEFT of start straight
-    [80, -32],
-    [56, -38],
-    // Turn 5 — sharp left heading up (well left of start straight at x=30)
-    [6, -70],
-    [-10, -58],
-    [-18, -44],
-    // Turn 6 — continuing up left side
-    [-20, -36],
-    [-28, -14],
-    // Turn 7 — left side going up
-    [-36, 10],
-    [-44, 34],
-    // Turn 8 — famous multi-apex sweeper
-    [-58, 56],
-    [-72, 78],
-    [-80, 100],
-    [-74, 120],
-    // Turn 9 — hairpin at top-left
-    [-58, 132],
-    [-38, 138],
-    [-20, 130],
-    // Turn 10 — heading right across top
-    [-6, 116],
-    [8, 104],
-    [22, 98],
-    // Turn 11 — slight kink
-    [38, 96],
-    [54, 100],
-    // Turn 12 — sharp right heading down
-    [66, 94],
-    [72, 80],
-    [66, 66],
-    // Turn 13 — heading down back to start
-    [54, 52],
-    [42, 38],
-    [34, 28],
+    // Start/Finish straight heading down
+    [40, -30],
+    [40, 0],       // START LINE
+    [40, 40],
+
+    // T1 — gentle right
+    [55, 75],
+    [80, 95],
+
+    // Long bottom straight going far right
+    [120, 108],
+    [170, 112],
+    [220, 105],
+
+    // T2 — big hairpin at far right
+    [255, 90],
+    [265, 65],
+    [255, 45],
+
+    // Return heading left (runs above outbound straight)
+    [220, 38],
+    [170, 35],
+    [120, 38],
+
+    // T3–T4 heading up-left
+    [70, 40],
+    [25, 28],
+    [-15, 5],
+
+    // T5 — sharp left going up
+    [-45, -25],
+    [-58, -50],
+
+    // T6–T7 up the left side
+    [-68, -80],
+    [-76, -110],
+
+    // T8 — famous multi-apex left sweeper
+    [-88, -135],
+    [-100, -160],
+    [-95, -185],
+    [-75, -200],
+
+    // T9 — hairpin at top-left
+    [-50, -210],
+    [-25, -200],
+
+    // T10 heading right across top
+    [0, -182],
+    [20, -170],
+
+    // T11 — kink
+    [40, -165],
+
+    // T12 — right turn heading down
+    [60, -160],
+    [65, -145],
+    [58, -125],
+
+    // T13 — heading down back to start
+    [52, -100],
+    [48, -70],
+    [44, -45],
+    [42, -35],
   ];
 
   return pts.map(([x, z]) => new THREE.Vector3(x, 0, z));
