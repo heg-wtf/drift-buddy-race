@@ -443,7 +443,7 @@ export const RacingGame = () => {
               <div className="flex flex-col gap-1 mb-3">
                 {lapTimes.map((time, i) => (
                   <div key={i} className="flex justify-between px-3 py-1.5 rounded-md odd:bg-muted/30">
-                    <span className="text-sm text-muted-foreground">랩 {i + 1}</span>
+                    <span className="text-sm text-muted-foreground">Lap {i + 1}</span>
                     <span className={`text-sm font-mono font-bold ${time === Math.min(...lapTimes) ? 'text-primary' : 'text-foreground'}`}>
                       {formatTime(time)}
                     </span>
