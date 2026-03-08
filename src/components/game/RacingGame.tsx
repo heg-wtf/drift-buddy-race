@@ -333,8 +333,29 @@ export const RacingGame = () => {
         <div className="absolute inset-0 bg-background/90 backdrop-blur-md flex items-center justify-center z-50">
           <div className="text-center">
             <h1 className="text-5xl font-bold text-primary mb-2">🏎️ Racing Game</h1>
-            <p className="text-lg text-muted-foreground mb-10">랩 수를 선택하세요</p>
-            <div className="flex gap-4">
+            
+            {/* Car color selection */}
+            <p className="text-lg text-muted-foreground mb-4 mt-8">차량 색상</p>
+            <div className="flex gap-4 justify-center mb-10">
+              {CAR_COLORS.map((c) => (
+                <button
+                  key={c.value}
+                  onClick={() => setPlayerColor(c.value)}
+                  className={`w-16 h-16 rounded-xl border-2 transition-all pointer-events-auto flex items-center justify-center ${
+                    playerColor === c.value
+                      ? 'border-primary scale-110 shadow-lg'
+                      : 'border-border hover:border-primary/50'
+                  }`}
+                  style={{ backgroundColor: c.value }}
+                >
+                  {playerColor === c.value && <span className="text-xl drop-shadow-md">✓</span>}
+                </button>
+              ))}
+            </div>
+
+            {/* Lap selection */}
+            <p className="text-lg text-muted-foreground mb-4">랩 수</p>
+            <div className="flex gap-4 justify-center">
               {LAP_OPTIONS.map((laps) => (
                 <button
                   key={laps}
