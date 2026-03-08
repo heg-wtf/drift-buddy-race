@@ -1,76 +1,90 @@
 import * as THREE from 'three';
 import { useMemo } from 'react';
 
-const TRACK_POINT_COUNT = 360;
+const TRACK_POINT_COUNT = 400;
 
+// Clean figure-8: x = A*sin(t), z = B*sin(2t)
 const createFigure8Points = (samples = TRACK_POINT_COUNT) => {
   const points: THREE.Vector3[] = [];
-
   for (let i = 0; i < samples; i++) {
     const t = (i / samples) * Math.PI * 2;
-    // Clean figure-8 (∞) centerline
-    const x = 34 * Math.sin(t);
-    const z = 20 * Math.sin(2 * t);
+    const x = 38 * Math.sin(t);
+    const z = 22 * Math.sin(2 * t);
     points.push(new THREE.Vector3(x, 0, z));
   }
-
   return points;
 };
 
+// Build a proper triangle-strip road mesh from center points
 const createRoadGeometry = (centerPoints: THREE.Vector3[], width: number) => {
-  const geometry = new THREE.BufferGeometry();
   const count = centerPoints.length;
-
+  // 2 vertices per center point (left + right edge)
   const positions = new Float32Array(count * 2 * 3);
   const uvs = new Float32Array(count * 2 * 2);
   const indices: number[] = [];
 
   for (let i = 0; i < count; i++) {
     const prev = centerPoints[(i - 1 + count) % count];
-    const current = centerPoints[i];
     const next = centerPoints[(i + 1) % count];
+    const current = centerPoints[i];
 
+    // Tangent from neighbors for smooth normals
     const tangent = new THREE.Vector3().subVectors(next, prev).normalize();
-    const perpendicular = new THREE.Vector3(-tangent.z, 0, tangent.x).normalize();
+    const perp = new THREE.Vector3(-tangent.z, 0, tangent.x);
 
-    const left = current.clone().add(perpendicular.clone().multiplyScalar(width / 2));
-    const right = current.clone().add(perpendicular.clone().multiplyScalar(-width / 2));
+    const left = current.clone().addScaledVector(perp, width / 2);
+    const right = current.clone().addScaledVector(perp, -width / 2);
 
-    const basePos = i * 6;
-    positions[basePos] = left.x;
-    positions[basePos + 1] = 0.02;
-    positions[basePos + 2] = left.z;
-    positions[basePos + 3] = right.x;
-    positions[basePos + 4] = 0.02;
-    positions[basePos + 5] = right.z;
+    const b = i * 6;
+    positions[b]     = left.x;
+    positions[b + 1] = 0.01;
+    positions[b + 2] = left.z;
+    positions[b + 3] = right.x;
+    positions[b + 4] = 0.01;
+    positions[b + 5] = right.z;
 
-    const u = i / count;
-    const baseUv = i * 4;
-    uvs[baseUv] = u;
-    uvs[baseUv + 1] = 0;
-    uvs[baseUv + 2] = u;
-    uvs[baseUv + 3] = 1;
+    const uv = i * 4;
+    uvs[uv]     = i / count;
+    uvs[uv + 1] = 0;
+    uvs[uv + 2] = i / count;
+    uvs[uv + 3] = 1;
 
-    const ni = (i + 1) % count;
+    // Two triangles per quad
     const li = i * 2;
     const ri = i * 2 + 1;
-    const lni = ni * 2;
-    const rni = ni * 2 + 1;
-
+    const lni = ((i + 1) % count) * 2;
+    const rni = ((i + 1) % count) * 2 + 1;
     indices.push(li, ri, lni, ri, rni, lni);
   }
 
-  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-  geometry.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
-  geometry.setIndex(indices);
-  geometry.computeVertexNormals();
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geo.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
+  geo.setIndex(indices);
+  geo.computeVertexNormals();
+  return geo;
+};
 
-  return geometry;
+// Compute offset (barrier) positions along the track
+const computeOffsetPoints = (centerPoints: THREE.Vector3[], offset: number) => {
+  const count = centerPoints.length;
+  const result: { pos: THREE.Vector3; dir: THREE.Vector3 }[] = [];
+  for (let i = 0; i < count; i++) {
+    const prev = centerPoints[(i - 1 + count) % count];
+    const next = centerPoints[(i + 1) % count];
+    const current = centerPoints[i];
+    const tangent = new THREE.Vector3().subVectors(next, prev).normalize();
+    const perp = new THREE.Vector3(-tangent.z, 0, tangent.x);
+    result.push({
+      pos: current.clone().addScaledVector(perp, offset),
+      dir: tangent,
+    });
+  }
+  return result;
 };
 
 export const getTrackPath = () => {
-  const curve = new THREE.CatmullRomCurve3(createFigure8Points(), true, 'catmullrom', 0.25);
-  return curve;
+  return new THREE.CatmullRomCurve3(createFigure8Points(), true, 'catmullrom', 0.25);
 };
 
 export const getTrackBounds = (trackWidth: number = 10) => {
@@ -81,17 +95,77 @@ export const getTrackBounds = (trackWidth: number = 10) => {
   const outerPoints: THREE.Vector3[] = [];
 
   for (let i = 0; i < points.length; i++) {
-    const current = points[i];
     const next = points[(i + 1) % points.length];
+    const direction = new THREE.Vector3().subVectors(next, points[i]).normalize();
+    const perp = new THREE.Vector3(-direction.z, 0, direction.x);
 
-    const direction = new THREE.Vector3().subVectors(next, current).normalize();
-    const perpendicular = new THREE.Vector3(-direction.z, 0, direction.x);
-
-    innerPoints.push(current.clone().add(perpendicular.clone().multiplyScalar(-trackWidth / 2)));
-    outerPoints.push(current.clone().add(perpendicular.clone().multiplyScalar(trackWidth / 2)));
+    innerPoints.push(points[i].clone().addScaledVector(perp, -trackWidth / 2));
+    outerPoints.push(points[i].clone().addScaledVector(perp, trackWidth / 2));
   }
 
   return { innerPoints, outerPoints, centerPoints: points };
+};
+
+// Barrier posts rendered as instanced boxes (no twisting tube)
+const BarrierPosts = ({ points, color }: { points: { pos: THREE.Vector3; dir: THREE.Vector3 }[]; color: string }) => {
+  const mesh = useMemo(() => {
+    // Place a barrier post every N points to keep perf manageable
+    const step = 2;
+    const postWidth = 0.4;
+    const postHeight = 0.5;
+
+    const count = Math.ceil(points.length / step);
+    const dummy = new THREE.Object3D();
+    const instancedMesh = new THREE.InstancedMesh(
+      new THREE.BoxGeometry(postWidth, postHeight, 1.2),
+      new THREE.MeshStandardMaterial({ color, metalness: 0.3, roughness: 0.6 }),
+      count
+    );
+
+    for (let i = 0; i < count; i++) {
+      const idx = (i * step) % points.length;
+      const { pos, dir } = points[idx];
+      dummy.position.set(pos.x, postHeight / 2, pos.z);
+      dummy.rotation.y = Math.atan2(dir.x, dir.z);
+      dummy.updateMatrix();
+      instancedMesh.setMatrixAt(i, dummy.matrix);
+    }
+    instancedMesh.instanceMatrix.needsUpdate = true;
+    return instancedMesh;
+  }, [points, color]);
+
+  return <primitive object={mesh} />;
+};
+
+// Center line dashes
+const CenterLineDashes = ({ centerPoints }: { centerPoints: THREE.Vector3[] }) => {
+  const mesh = useMemo(() => {
+    const step = 8;
+    const count = Math.ceil(centerPoints.length / step / 2); // every other gap = dash
+    const dummy = new THREE.Object3D();
+    const instancedMesh = new THREE.InstancedMesh(
+      new THREE.PlaneGeometry(0.3, 2),
+      new THREE.MeshStandardMaterial({ color: '#ffffff', side: THREE.DoubleSide }),
+      count
+    );
+
+    let idx = 0;
+    for (let i = 0; i < centerPoints.length && idx < count; i += step * 2) {
+      const p = centerPoints[i];
+      const next = centerPoints[(i + 1) % centerPoints.length];
+      const dir = new THREE.Vector3().subVectors(next, p).normalize();
+      dummy.position.set(p.x, 0.025, p.z);
+      dummy.rotation.set(-Math.PI / 2, 0, Math.atan2(dir.x, dir.z));
+      dummy.updateMatrix();
+      instancedMesh.setMatrixAt(idx, dummy.matrix);
+      idx++;
+    }
+    instancedMesh.count = idx;
+    instancedMesh.instanceMatrix.needsUpdate = true;
+    return instancedMesh;
+  }, [centerPoints]);
+
+  return <primitive object={mesh} />;
 };
 
 interface TrackProps {
@@ -99,7 +173,7 @@ interface TrackProps {
 }
 
 export const Track = ({ width = 10 }: TrackProps) => {
-  const { roadGeometry, startLinePos, startLineRot, innerCurve, outerCurve } = useMemo(() => {
+  const { roadGeometry, startLinePos, startLineRot, centerPoints, leftBarrier, rightBarrier } = useMemo(() => {
     const path = getTrackPath();
     const points = path.getPoints(TRACK_POINT_COUNT);
     const roadGeometry = createRoadGeometry(points, width);
@@ -109,43 +183,48 @@ export const Track = ({ width = 10 }: TrackProps) => {
     const startDir = new THREE.Vector3().subVectors(nextPos, startPos).normalize();
     const rotation = Math.atan2(startDir.x, startDir.z);
 
-    const bounds = getTrackBounds(width);
-    const innerCurve = new THREE.CatmullRomCurve3(bounds.innerPoints, true, 'catmullrom', 0.25);
-    const outerCurve = new THREE.CatmullRomCurve3(bounds.outerPoints, true, 'catmullrom', 0.25);
+    const leftBarrier = computeOffsetPoints(points, width / 2 + 0.3);
+    const rightBarrier = computeOffsetPoints(points, -(width / 2 + 0.3));
 
     return {
       roadGeometry,
       startLinePos: startPos,
       startLineRot: rotation,
-      innerCurve,
-      outerCurve,
+      centerPoints: points,
+      leftBarrier,
+      rightBarrier,
     };
   }, [width]);
 
   return (
     <group>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.06, 0]} receiveShadow>
-        <planeGeometry args={[260, 260]} />
+      {/* Grass ground */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.05, 0]} receiveShadow>
+        <planeGeometry args={[280, 280]} />
         <meshStandardMaterial color="#2d5a27" />
       </mesh>
 
+      {/* Road surface */}
       <mesh geometry={roadGeometry} receiveShadow>
-        <meshStandardMaterial color="#0a0a0a" roughness={0.88} metalness={0.06} />
+        <meshStandardMaterial 
+          color="#1a1a1a" 
+          roughness={0.85} 
+          metalness={0.05}
+          side={THREE.DoubleSide}
+        />
       </mesh>
 
-      <mesh position={[0, 0.25, 0]}>
-        <tubeGeometry args={[innerCurve, TRACK_POINT_COUNT, 0.35, 8, true]} />
-        <meshStandardMaterial color="#e74c3c" />
-      </mesh>
+      {/* Center line dashes */}
+      <CenterLineDashes centerPoints={centerPoints} />
 
-      <mesh position={[0, 0.25, 0]}>
-        <tubeGeometry args={[outerCurve, TRACK_POINT_COUNT, 0.35, 8, true]} />
-        <meshStandardMaterial color="#3498db" />
-      </mesh>
+      {/* Barrier walls — instanced boxes, no twisting */}
+      <BarrierPosts points={leftBarrier} color="#cc3333" />
+      <BarrierPosts points={rightBarrier} color="#3366cc" />
 
+      {/* Start / finish line */}
       <mesh position={[startLinePos.x, 0.03, startLinePos.z]} rotation={[-Math.PI / 2, 0, startLineRot]}>
         <planeGeometry args={[width, 2.6]} />
-        <meshStandardMaterial color="#f8fafc" />
+        <meshStandardMaterial color="#f8fafc" side={THREE.DoubleSide} />
       </mesh>
     </group>
   );
