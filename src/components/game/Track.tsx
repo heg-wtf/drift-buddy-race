@@ -3,70 +3,67 @@ import { useMemo } from 'react';
 
 const TRACK_POINT_COUNT = 600;
 
-// Lusail Qatar International Circuit — hand-traced waypoints
+// Lusail Qatar International Circuit — re-traced with wide spacing
+// Track width = 20, so parallel sections must be 30+ apart
 const createLusailPoints = () => {
-  // Traced from reference image, scaled to ~120x100 game units
-  // Start/finish at bottom-center, going clockwise
   const waypoints: [number, number][] = [
-    // Start/finish straight (bottom)
-    [8, -48],
-    [18, -48],
-    [28, -47],
-    // Turn 1 — right-hand sweep up
-    [36, -44],
-    [40, -38],
-    [42, -30],
-    // Short straight going up-right
-    [44, -22],
-    [46, -14],
-    // Turn 2-3 — chicane right side
-    [48, -6],
-    [46, 2],
-    [42, 8],
-    // Straight up to turn 4
-    [38, 16],
-    [36, 22],
-    // Turn 4 — sharp right
-    [38, 28],
-    [42, 32],
+    // Start/finish straight (bottom, running left→right)
+    [-10, -80],
+    [10, -80],
+    [30, -80],
+    [50, -78],
+    // Turn 1 — long right sweep upward
+    [65, -70],
+    [72, -58],
+    [75, -42],
+    // Straight up right side
+    [76, -24],
+    [75, -6],
+    // Turn 2 — right into top section
+    [70, 10],
+    [62, 22],
+    // Turn 3 — sharp left (hairpin top-right)
+    [50, 30],
+    [38, 34],
+    [28, 40],
+    // Turn 4 — up to top-right peak
+    [22, 52],
+    [28, 62],
+    [38, 66],
     // Turn 5 — hairpin back left
-    [40, 38],
-    [34, 42],
-    [26, 40],
-    // Turn 6 — back right
-    [22, 36],
-    [24, 30],
-    [30, 26],
-    // Switchback section — turns 7-9
-    [28, 20],
-    [20, 18],
-    [14, 22],
-    [10, 28],
-    // Turn 10 — up to top
-    [4, 36],
-    [-2, 42],
-    [-10, 46],
-    // Top section — turns 11-12
-    [-18, 44],
-    [-24, 38],
-    [-28, 30],
-    // Turn 13 — down left side
-    [-30, 22],
-    [-28, 14],
-    [-24, 6],
-    // Flowing left section — turns 14-15
-    [-28, -2],
-    [-34, -8],
-    [-38, -16],
-    // Turn 16 — bottom left
-    [-36, -26],
-    [-30, -34],
-    [-24, -40],
+    [46, 62],
+    [48, 52],
+    [42, 44],
+    // Turn 6 — left across top
+    [30, 38],
+    [16, 42],
+    [2, 50],
+    // Turn 7 — top-left peak
+    [-12, 58],
+    [-24, 62],
+    [-36, 58],
+    // Turn 8 — down left side
+    [-44, 48],
+    [-48, 36],
+    [-46, 22],
+    // Turn 9 — slight right
+    [-40, 10],
+    [-36, 0],
+    // Turn 10 — left kink
+    [-40, -12],
+    [-48, -22],
+    [-54, -34],
+    // Turn 11 — bottom-left sweep
+    [-56, -48],
+    [-52, -60],
+    [-44, -70],
     // Final straight back to start
-    [-16, -46],
-    [-6, -48],
-    [0, -48],
+    [-34, -76],
+    [-20, -80],
   ];
+
+  return waypoints.map(([x, z]) => new THREE.Vector3(x, 0, z));
+};
 
   return waypoints.map(([x, z]) => new THREE.Vector3(x, 0, z));
 };
