@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { useMemo } from 'react';
 import { Grandstand } from './Grandstand';
+import { Cameramen, TrackBuildings } from './TrackObjects';
 
 const TRACK_POINT_COUNT = 600;
 const MIN_SAFE_DISTANCE = 35; // Must be > track width (20) + margin
