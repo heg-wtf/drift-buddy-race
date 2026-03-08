@@ -130,22 +130,30 @@ export const Track = ({ width = 10 }: TrackProps) => {
 
   return (
     <group>
-      {/* Track surface - black asphalt */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]} receiveShadow>
-        <shapeGeometry args={[trackShape]} />
-        <meshStandardMaterial color="#1a1a1a" roughness={0.85} />
+      {/* Grass/ground - FIRST, below everything */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.05, 0]} receiveShadow>
+        <planeGeometry args={[200, 200]} />
+        <meshStandardMaterial color="#2d5a27" />
       </mesh>
       
-      {/* Track overlay for depth */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 0]}>
+      {/* Inner grass area */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.04, 0]}>
+        <shapeGeometry args={[new THREE.Shape(
+          getTrackBounds(width).innerPoints.map(p => new THREE.Vector2(p.x, p.z))
+        )]} />
+        <meshStandardMaterial color="#3d7a37" />
+      </mesh>
+
+      {/* Track surface - BLACK asphalt, rendered ABOVE grass */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]} receiveShadow>
         <shapeGeometry args={[trackShape]} />
-        <meshStandardMaterial color="#111111" roughness={0.9} />
+        <meshStandardMaterial color="#0a0a0a" roughness={0.85} metalness={0.1} />
       </mesh>
       
       {/* Center racing line */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.025, 0]}>
-        <tubeGeometry args={[getTrackPath(), 200, 0.15, 8, true]} />
-        <meshStandardMaterial color="#fff" opacity={0.3} transparent />
+      <mesh position={[0, 0.025, 0]}>
+        <tubeGeometry args={[getTrackPath(), 200, 0.1, 8, true]} />
+        <meshStandardMaterial color="#ffffff" opacity={0.15} transparent />
       </mesh>
       
       {/* Inner barrier */}
@@ -194,20 +202,6 @@ export const Track = ({ width = 10 }: TrackProps) => {
           <meshStandardMaterial color={i % 2 === 0 ? '#000' : '#fff'} />
         </mesh>
       ))}
-      
-      {/* Grass/ground */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.1, 0]} receiveShadow>
-        <planeGeometry args={[200, 200]} />
-        <meshStandardMaterial color="#2d5a27" />
-      </mesh>
-      
-      {/* Inner grass area */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.005, 0]}>
-        <shapeGeometry args={[new THREE.Shape(
-          getTrackBounds(width).innerPoints.map(p => new THREE.Vector2(p.x, p.z))
-        )]} />
-        <meshStandardMaterial color="#3d7a37" />
-      </mesh>
     </group>
   );
 };

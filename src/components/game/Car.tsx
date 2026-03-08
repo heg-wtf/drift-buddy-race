@@ -13,7 +13,7 @@ interface CarProps {
     left: boolean;
     right: boolean;
   };
-  onUpdate?: (position: THREE.Vector3, rotation: number, speed: number) => void;
+  onUpdate?: (position: THREE.Vector3, rotation: number, speed: number, trackProgress: number) => void;
   onPositionUpdate?: (id: string, position: THREE.Vector3) => void;
   aiIndex?: number;
   id: string;
@@ -22,6 +22,7 @@ interface CarProps {
   onDamage?: (id: string, amount: number) => void;
   trackWidth?: number;
   raceStarted?: boolean;
+  playerProgress?: number;
 }
 
 export const Car = ({ 
@@ -37,7 +38,8 @@ export const Car = ({
   damage = 0,
   onDamage,
   trackWidth = 10,
-  raceStarted = false
+  raceStarted = false,
+  playerProgress = 0
 }: CarProps) => {
   const carRef = useRef<THREE.Group>(null);
   const velocity = useRef(0);
@@ -201,21 +203,56 @@ export const Car = ({
       carRef.current.position.x += Math.sin(rotation.current) * velocity.current;
       carRef.current.position.z += Math.cos(rotation.current) * velocity.current;
 
+      // Calculate player's track progress
+      const pos = carRef.current.position;
+      let minDist = Infinity;
+      let closestT = 0;
+      const trackPts = trackPath.current.getPoints(100);
+      for (let i = 0; i < trackPts.length; i++) {
+        const d = pos.distanceTo(trackPts[i]);
+        if (d < minDist) { minDist = d; closestT = i / trackPts.length; }
+      }
+
       if (onUpdate) {
-        onUpdate(carRef.current.position.clone(), rotation.current, Math.abs(velocity.current) * 250);
+        onUpdate(carRef.current.position.clone(), rotation.current, Math.abs(velocity.current) * 250, closestT);
       }
     } else {
       // AI car - follows track path
       aiProgress.current += aiSpeed.current * delta * 60;
       if (aiProgress.current > 1) aiProgress.current -= 1;
       
+      // Check if AI is close to player and needs to avoid
+      let avoidOffset = 0;
+      if (otherCars) {
+        const playerPos = otherCars.get('player');
+        if (playerPos) {
+          const distToPlayer = carRef.current.position.distanceTo(playerPos);
+          if (distToPlayer < 6) {
+            // Steer away from player - move to the side
+            const toPlayer = playerPos.clone().sub(carRef.current.position).normalize();
+            const currentDir = new THREE.Vector3(
+              Math.sin(carRef.current.rotation.y), 0, Math.cos(carRef.current.rotation.y)
+            ).normalize();
+            const cross = currentDir.cross(toPlayer).y;
+            avoidOffset = cross > 0 ? -2.5 : 2.5;
+            
+            // Slow down a bit if very close behind
+            if (distToPlayer < 3) {
+              aiProgress.current -= aiSpeed.current * delta * 30; // slow down
+            }
+          }
+        }
+      }
+      
       const currentPoint = trackPath.current.getPointAt(aiProgress.current % 1);
       const nextPoint = trackPath.current.getPointAt((aiProgress.current + 0.01) % 1);
       
-      carRef.current.position.x = currentPoint.x + knockbackVelocity.current.x;
-      carRef.current.position.z = currentPoint.z + knockbackVelocity.current.z;
-      
       const direction = new THREE.Vector3().subVectors(nextPoint, currentPoint).normalize();
+      const perpendicular = new THREE.Vector3(-direction.z, 0, direction.x);
+      
+      carRef.current.position.x = currentPoint.x + perpendicular.x * avoidOffset + knockbackVelocity.current.x;
+      carRef.current.position.z = currentPoint.z + perpendicular.z * avoidOffset + knockbackVelocity.current.z;
+      
       carRef.current.rotation.y = Math.atan2(direction.x, direction.z);
     }
 
