@@ -260,8 +260,8 @@ export const Car = ({
           </mesh>
           
           {/* Nose cone */}
-          <mesh position={[0, 0.2, 1.8]} castShadow>
-            <coneGeometry args={[0.3, 0.8, 8]} rotation={[Math.PI / 2, 0, 0]} />
+          <mesh position={[0, 0.2, 1.8]} rotation={[-Math.PI / 2, 0, 0]} castShadow>
+            <coneGeometry args={[0.3, 0.8, 8]} />
             <meshStandardMaterial color={color} metalness={0.9} roughness={0.15} />
           </mesh>
           
