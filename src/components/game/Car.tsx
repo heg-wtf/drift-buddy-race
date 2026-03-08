@@ -12,6 +12,7 @@ interface CarProps {
     backward: boolean;
     left: boolean;
     right: boolean;
+    boost: boolean;
   };
   onUpdate?: (position: THREE.Vector3, rotation: number, speed: number, trackProgress: number) => void;
   onPositionUpdate?: (id: string, position: THREE.Vector3) => void;
