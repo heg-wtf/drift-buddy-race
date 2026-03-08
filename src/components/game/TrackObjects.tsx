@@ -4,34 +4,33 @@ import { useMemo } from 'react';
 // Cameramen positioned outside corners of the track
 export const Cameramen = () => {
   const mesh = useMemo(() => {
-    // Positions outside each turn apex, offset outward from track
+    // Positions well outside track (15+ units beyond barrier)
     const positions: [number, number, number, number][] = [
-      // [x, z, rotation, which turn]
-      // T1 — outside right
-      [75, 75, -0.5, 1],
-      // T2 — outside of hairpin
-      [420, 100, Math.PI / 2, 2],
-      [398, 130, 0.8, 2],
-      // T3
-      [85, 132, 0.3, 3],
-      // T4
-      [5, 100, 1.2, 4],
-      // T5
-      [-50, 30, 1.8, 5],
-      // T6-T7
-      [-95, -25, 2.0, 6],
-      [-100, -55, 2.2, 7],
-      // T8 — multi-apex
-      [-130, -110, 2.5, 8],
-      [-125, -148, 3.0, 8],
-      // T9
-      [-55, -182, -0.5, 9],
-      // T11
-      [55, -145, -0.3, 11],
-      // T12
-      [98, -115, -1.0, 12],
-      // T13
-      [72, -55, -1.5, 13],
+      // T1 — outside right (track at ~[58,65], push further out)
+      [85, 78, -0.5, 1],
+      // T2 — outside of hairpin (track apex at ~[408,100])
+      [432, 100, Math.PI / 2, 2],
+      [415, 140, 0.8, 2],
+      // T3 (track at ~[100,118])
+      [85, 145, 0.3, 3],
+      // T4 (track at ~[20,92])
+      [-5, 115, 1.2, 4],
+      // T5 (track at ~[-40,44])
+      [-65, 45, 1.8, 5],
+      // T6-T7 (track at ~[-80,-40])
+      [-110, -25, 2.0, 6],
+      [-115, -55, 2.2, 7],
+      // T8 — multi-apex (track at ~[-118,-120])
+      [-145, -110, 2.5, 8],
+      [-140, -155, 3.0, 8],
+      // T9 (track at ~[-62,-170])
+      [-60, -195, -0.5, 9],
+      // T11 (track at ~[42,-134])
+      [55, -160, -0.3, 11],
+      // T12 (track at ~[86,-110])
+      [112, -115, -1.0, 12],
+      // T13 (track at ~[62,-68])
+      [88, -60, -1.5, 13],
     ];
 
     const count = positions.length;
