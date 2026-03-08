@@ -226,7 +226,11 @@ export const RacingGame = () => {
     raceStartTimeRef.current = performance.now();
   }, []);
 
-  const handleCountdownBeep = useCallback((final: boolean) => {
+  const handleRestart = useCallback(() => {
+    window.location.reload();
+  }, []);
+
+
     if (soundInitialized) {
       soundEngine.playCountdownBeep(final);
     }
