@@ -51,6 +51,9 @@ export const Car = ({
   const knockbackVelocity = useRef(new THREE.Vector3(0, 0, 0));
   const sparksRef = useRef<THREE.Points>(null);
   const sparkTime = useRef(0);
+  const boostFlameRef = useRef<THREE.Group>(null);
+  const boostTrailRef = useRef<THREE.Points>(null);
+  const boostTime = useRef(0);
   
   const trackPath = useRef(getTrackPath());
   const trackBounds = useRef(getTrackBounds(trackWidth));
