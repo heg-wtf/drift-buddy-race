@@ -63,8 +63,7 @@ export const RacingGame = () => {
   const [playerRotation, setPlayerRotation] = useState(0);
   const [speed, setSpeed] = useState(0);
   const [carPositions, setCarPositions] = useState<Map<string, THREE.Vector3>>(new Map());
-  const [damages, setDamages] = useState<Map<string, number>>(new Map());
-  const [gameOver, setGameOver] = useState(false);
+  const [raceStarted, setRaceStarted] = useState(false);
   const [raceStarted, setRaceStarted] = useState(false);
   const [soundInitialized, setSoundInitialized] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(false);
