@@ -91,6 +91,13 @@ export const RacingGame = () => {
     };
   }, []);
 
+  // Mute/unmute based on soundEnabled
+  useEffect(() => {
+    if (soundInitialized) {
+      soundEngine.setMasterVolume(soundEnabled ? 1 : 0);
+    }
+  }, [soundEnabled, soundInitialized]);
+
   // Update engine sound based on speed
   useEffect(() => {
     if (raceStarted && soundInitialized) {
