@@ -1,33 +1,22 @@
 import * as THREE from 'three';
 import { useMemo } from 'react';
 
-// Figure-8 track layout
-const FIGURE_8_POINTS = [
-  // Start at bottom center of figure 8
-  { x: 0, z: 0 },
-  // Right loop - going clockwise
-  { x: 15, z: 5 },
-  { x: 25, z: 15 },
-  { x: 30, z: 30 },
-  { x: 25, z: 45 },
-  { x: 10, z: 55 },
-  { x: -5, z: 55 },
-  // Cross over to left loop (the middle crossing of figure 8)
-  { x: -15, z: 45 },
-  { x: -20, z: 30 },
-  // Left loop - going counter-clockwise (from car's perspective)  
-  { x: -30, z: 15 },
-  { x: -35, z: 0 },
-  { x: -30, z: -15 },
-  { x: -15, z: -25 },
-  { x: 0, z: -25 },
-  { x: 15, z: -20 },
-  // Cross back over
-  { x: 20, z: -10 },
-  { x: 15, z: -5 },
-  // Back to start
-  { x: 5, z: -2 },
-];
+// True figure-8 track: two circles connected at center
+const FIGURE_8_POINTS: { x: number; z: number }[] = [];
+
+// Generate figure-8 using lemniscate-like path
+// Top loop (clockwise)
+const R = 25; // radius of each loop
+const steps = 32;
+
+for (let i = 0; i < steps; i++) {
+  const t = (i / steps) * Math.PI * 2;
+  // Lemniscate of Bernoulli parametric form (figure-8)
+  const denom = 1 + Math.sin(t) * Math.sin(t);
+  const x = (R * 1.5 * Math.cos(t)) / denom;
+  const z = (R * 1.5 * Math.sin(t) * Math.cos(t)) / denom;
+  FIGURE_8_POINTS.push({ x, z });
+}
 
 export const getTrackPath = () => {
   const curve = new THREE.CatmullRomCurve3(
