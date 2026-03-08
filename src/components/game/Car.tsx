@@ -232,7 +232,7 @@ export const Car = ({
       }
 
       if (onUpdate) {
-        onUpdate(carRef.current.position.clone(), rotation.current, Math.abs(velocity.current) * 250, closestT);
+        onUpdate(carRef.current.position.clone(), rotation.current, Math.abs(velocity.current) * 85, closestT);
       }
     } else {
       // AI car - follows track path
