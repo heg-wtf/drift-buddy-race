@@ -44,8 +44,9 @@ export const Car = ({
   const carRef = useRef<THREE.Group>(null);
   const velocity = useRef(0);
   const rotation = useRef(0);
-  const aiProgress = useRef(aiIndex * 0.1);
-  const aiSpeed = useRef(0.003 + Math.random() * 0.0015);
+  // AI starts behind player: negative progress (will start at positions behind start line)
+  const aiProgress = useRef(-0.02 - (aiIndex + 1) * 0.015);
+  const aiSpeed = useRef(0.0015 + Math.random() * 0.0008);
   const knockbackVelocity = useRef(new THREE.Vector3(0, 0, 0));
   const sparksRef = useRef<THREE.Points>(null);
   const sparkTime = useRef(0);
