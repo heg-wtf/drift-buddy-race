@@ -159,11 +159,6 @@ export const Car = ({
         if (distance < 2.5) {
           const pushDir = carRef.current!.position.clone().sub(otherPos).normalize();
           knockbackVelocity.current.add(pushDir.multiplyScalar(0.25));
-          
-          if (onDamage && Math.abs(velocity.current) > 0.05) {
-            onDamage(id, 10);
-          }
-          
           velocity.current *= 0.4;
           sparkTime.current = 0.5;
         }
@@ -174,11 +169,6 @@ export const Car = ({
     const wallCheck = checkWallCollision(carRef.current.position);
     if (wallCheck.hit) {
       knockbackVelocity.current.add(wallCheck.normal.multiplyScalar(0.2));
-      
-      if (onDamage && Math.abs(velocity.current) > 0.05) {
-        onDamage(id, 10);
-      }
-      
       velocity.current *= 0.3;
       sparkTime.current = 0.3;
     }
