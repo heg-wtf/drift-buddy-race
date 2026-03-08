@@ -349,49 +349,54 @@ export const RacingGame = () => {
       {/* Lap selection screen */}
       {showStartScreen && (
         <div className="absolute inset-0 bg-background/90 backdrop-blur-md flex items-center justify-center z-50">
-          <div className="text-center">
-            <h1 className="text-5xl font-bold text-primary mb-2">🏎️ Racing Game</h1>
+          <div className="flex flex-col items-center gap-8 w-full max-w-lg px-6">
+            <h1 className="text-5xl font-bold text-primary">🏎️ Racing Game</h1>
             
             {/* Car color selection */}
-            <p className="text-lg text-muted-foreground mb-4 mt-8">차량 색상</p>
-            <div className="flex gap-4 justify-center mb-10">
-              {CAR_COLORS.map((c) => (
-                <button
-                  key={c.value}
-                  onClick={() => setPlayerColor(c.value)}
-                  className={`w-16 h-16 rounded-xl border-2 transition-all pointer-events-auto flex items-center justify-center ${
-                    playerColor === c.value
-                      ? 'border-primary scale-110 shadow-lg'
-                      : 'border-border hover:border-primary/50'
-                  }`}
-                  style={{ backgroundColor: c.preview }}
-                >
-                  {playerColor === c.value && <span className="text-xl drop-shadow-md">✓</span>}
-                </button>
-              ))}
+            <div className="flex flex-col items-center gap-3 w-full">
+              <p className="text-base text-muted-foreground tracking-wide">차량 색상</p>
+              <div className="flex gap-5 justify-center">
+                {CAR_COLORS.map((c) => (
+                  <button
+                    key={c.value}
+                    onClick={() => setPlayerColor(c.value)}
+                    className={`w-14 h-14 rounded-xl border-2 transition-all pointer-events-auto flex items-center justify-center ${
+                      playerColor === c.value
+                        ? 'border-primary scale-110 shadow-lg'
+                        : 'border-border hover:border-primary/50'
+                    }`}
+                    style={{ backgroundColor: c.preview }}
+                  >
+                    {playerColor === c.value && <span className="text-lg drop-shadow-md">✓</span>}
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* Lap selection */}
-            <p className="text-lg text-muted-foreground mb-4">랩 수</p>
-            <div className="flex gap-4 justify-center">
-              {LAP_OPTIONS.map((laps) => (
-                <button
-                  key={laps}
-                  onClick={() => setSelectedLaps(laps)}
-                  className={`w-20 h-20 rounded-xl bg-card border-2 text-2xl font-bold text-foreground transition-all pointer-events-auto ${
-                    selectedLaps === laps
-                      ? 'border-primary bg-primary/10'
-                      : 'border-border hover:border-primary/50 hover:bg-primary/5'
-                  }`}
-                >
-                  {laps}
-                </button>
-              ))}
+            <div className="flex flex-col items-center gap-3 w-full">
+              <p className="text-base text-muted-foreground tracking-wide">랩 수</p>
+              <div className="flex gap-4 justify-center">
+                {LAP_OPTIONS.map((laps) => (
+                  <button
+                    key={laps}
+                    onClick={() => setSelectedLaps(laps)}
+                    className={`w-16 h-16 rounded-xl bg-card border-2 text-xl font-bold text-foreground transition-all pointer-events-auto ${
+                      selectedLaps === laps
+                        ? 'border-primary bg-primary/10'
+                        : 'border-border hover:border-primary/50 hover:bg-primary/5'
+                    }`}
+                  >
+                    {laps}
+                  </button>
+                ))}
+              </div>
             </div>
 
+            {/* Sound toggle */}
             <button
               onClick={() => setSoundEnabled(!soundEnabled)}
-              className="mt-8 px-6 py-3 rounded-xl bg-card border-2 border-border text-foreground hover:border-primary hover:bg-primary/10 transition-all pointer-events-auto flex items-center gap-2 mx-auto"
+              className="px-5 py-2.5 rounded-xl bg-card border-2 border-border text-foreground hover:border-primary hover:bg-primary/10 transition-all pointer-events-auto flex items-center gap-2"
             >
               {soundEnabled ? '🔊' : '🔇'}
               <span className="text-sm font-medium">사운드 {soundEnabled ? 'ON' : 'OFF'}</span>
@@ -404,7 +409,7 @@ export const RacingGame = () => {
                 setShowStartScreen(false);
                 setCountdownReady(true);
               }}
-              className="mt-6 px-10 py-4 rounded-xl bg-primary text-primary-foreground text-2xl font-bold hover:opacity-90 transition-all pointer-events-auto"
+              className="w-64 py-4 rounded-xl bg-primary text-primary-foreground text-2xl font-bold hover:opacity-90 transition-all pointer-events-auto"
             >
               🏁 Race Start
             </button>
