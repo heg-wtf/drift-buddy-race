@@ -57,6 +57,7 @@ export const RacingGame = () => {
     backward: false,
     left: false,
     right: false,
+    boost: false,
   });
   const [playerPosition, setPlayerPosition] = useState<THREE.Vector3 | null>(null);
   const [playerRotation, setPlayerRotation] = useState(0);
@@ -76,11 +77,13 @@ export const RacingGame = () => {
   const [lapTimes, setLapTimes] = useState<number[]>([]);
   const [lastLapTime, setLastLapTime] = useState<number | null>(null);
   const [showLastLap, setShowLastLap] = useState(false);
+  const [boostUsedThisLap, setBoostUsedThisLap] = useState(false);
+  const [boostActive, setBoostActive] = useState(false);
   const lapStartTimeRef = useRef(0);
   const raceStartTimeRef = useRef(0);
   const prevProgressRef = useRef(0);
   const prevDamageRef = useRef<Map<string, number>>(new Map());
-
+  
   // Initialize sound on first user interaction
   useEffect(() => {
     const initSound = () => {
@@ -148,6 +151,18 @@ export const RacingGame = () => {
         case 'arrowright':
           setControls(c => ({ ...c, right: true }));
           break;
+        case ' ':
+          e.preventDefault();
+          if (!boostUsedThisLap && !boostActive) {
+            setBoostUsedThisLap(true);
+            setBoostActive(true);
+            setControls(c => ({ ...c, boost: true }));
+            setTimeout(() => {
+              setBoostActive(false);
+              setControls(c => ({ ...c, boost: false }));
+            }, 2000);
+          }
+          break;
         case 'r':
           window.location.reload();
           break;
@@ -182,7 +197,7 @@ export const RacingGame = () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [raceStarted]);
+  }, [raceStarted, boostUsedThisLap, boostActive]);
 
   const handlePlayerUpdate = useCallback((position: THREE.Vector3, rotation: number, currentSpeed: number, trackProgress: number) => {
     setPlayerPosition(position);
@@ -209,6 +224,7 @@ export const RacingGame = () => {
       setShowLastLap(true);
       setTimeout(() => setShowLastLap(false), 3000);
       
+      setBoostUsedThisLap(false);
       setLap(prev => {
         const newLap = prev + 1;
         if (newLap > (totalLaps || 10)) {
@@ -300,7 +316,7 @@ export const RacingGame = () => {
           position={[0, 0, 0]}
           color={playerColor}
           isPlayer
-          controls={raceStarted && !raceFinished ? controls : { forward: false, backward: false, left: false, right: false }}
+          controls={raceStarted && !raceFinished ? controls : { forward: false, backward: false, left: false, right: false, boost: false }}
           onUpdate={handlePlayerUpdate}
           onPositionUpdate={handlePositionUpdate}
           otherCars={carPositions}
@@ -389,6 +405,8 @@ export const RacingGame = () => {
         lap={currentLap}
         totalLaps={totalLaps || 10}
         damage={playerDamage}
+        boostAvailable={!boostUsedThisLap}
+        boostActive={boostActive}
       />
 
       <Minimap 

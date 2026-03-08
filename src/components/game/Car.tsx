@@ -12,6 +12,7 @@ interface CarProps {
     backward: boolean;
     left: boolean;
     right: boolean;
+    boost: boolean;
   };
   onUpdate?: (position: THREE.Vector3, rotation: number, speed: number, trackProgress: number) => void;
   onPositionUpdate?: (id: string, position: THREE.Vector3) => void;
@@ -200,10 +201,11 @@ export const Car = ({
       const acceleration = 1.2;
       const friction = 0.99;
       const turnSpeed = 2.8;
-      const maxSpeed = 1.8;
+      const maxSpeed = controls.boost ? 3.2 : 1.8;
+      const accelMultiplier = controls.boost ? 2.5 : 1;
 
       if (controls.forward) {
-        velocity.current = Math.min(velocity.current + acceleration * delta, maxSpeed);
+        velocity.current = Math.min(velocity.current + acceleration * accelMultiplier * delta, maxSpeed);
       }
       if (controls.backward) {
         velocity.current = Math.max(velocity.current - acceleration * delta, -maxSpeed * 0.5);

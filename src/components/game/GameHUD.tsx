@@ -5,9 +5,11 @@ interface GameHUDProps {
   lap: number;
   totalLaps?: number;
   damage?: number;
+  boostAvailable?: boolean;
+  boostActive?: boolean;
 }
 
-export const GameHUD = ({ speed, position, totalCars, lap, totalLaps = 10, damage = 0 }: GameHUDProps) => {
+export const GameHUD = ({ speed, position, totalCars, lap, totalLaps = 10, damage = 0, boostAvailable = true, boostActive = false }: GameHUDProps) => {
   const damageColor = damage > 70 ? 'text-destructive' : damage > 40 ? 'text-accent' : 'text-primary';
   
   return (
@@ -19,6 +21,18 @@ export const GameHUD = ({ speed, position, totalCars, lap, totalLaps = 10, damag
           {Math.round(speed)}
           <span className="text-lg text-muted-foreground ml-1">km/h</span>
         </div>
+      </div>
+
+      {/* Boost indicator */}
+      <div className="absolute bottom-28 left-8 bg-card/80 backdrop-blur-sm rounded-lg p-3 border border-border">
+        <div className="text-muted-foreground text-xs mb-1">부스터 (Space)</div>
+        {boostActive ? (
+          <div className="text-lg font-bold text-orange-400 animate-pulse">🔥 사용 중!</div>
+        ) : boostAvailable ? (
+          <div className="text-lg font-bold text-primary">⚡ 사용 가능</div>
+        ) : (
+          <div className="text-lg font-bold text-muted-foreground">✕ 사용 완료</div>
+        )}
       </div>
 
       {/* Damage display */}
@@ -74,6 +88,7 @@ export const GameHUD = ({ speed, position, totalCars, lap, totalLaps = 10, damag
           <div>↓ / S - 후진</div>
           <div>← / A - 좌회전</div>
           <div>→ / D - 우회전</div>
+          <div>Space - 부스터</div>
           <div className="text-primary font-bold mt-2">R - 재시작</div>
         </div>
       </div>
