@@ -12,6 +12,12 @@ import { soundEngine } from './SoundEngine';
 const AI_COLORS: string[] = []; // No AI cars
 const TRACK_WIDTH = 20;
 const LAP_OPTIONS = [3, 5, 7, 10];
+const CAR_COLORS = [
+  { label: '빨간색', value: '#e63946' },
+  { label: '주황색', value: '#ff8c00' },
+  { label: '파란색', value: '#2563eb' },
+  { label: '흰색', value: '#f0f0f0' },
+];
 
 const formatTime = (seconds: number) => {
   const mins = Math.floor(seconds / 60);
