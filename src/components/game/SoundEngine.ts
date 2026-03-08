@@ -80,6 +80,8 @@ class SoundEngine {
     
     osc.connect(gain);
     gain.connect(this.getMasterGain());
+    osc.start();
+    osc.stop(ctx.currentTime + 0.4);
     
     // Crunch noise
     noise.type = 'sawtooth';
@@ -90,6 +92,7 @@ class SoundEngine {
     
     noise.connect(noiseGain);
     noiseGain.connect(this.getMasterGain());
+    noise.start();
     noise.stop(ctx.currentTime + 0.3);
   }
 
