@@ -3,7 +3,23 @@ class SoundEngine {
   private ctx: AudioContext | null = null;
   private engineOsc: OscillatorNode | null = null;
   private engineGain: GainNode | null = null;
+  private masterGain: GainNode | null = null;
   private isPlaying = false;
+
+  private getMasterGain(): GainNode {
+    const ctx = this.getCtx();
+    if (!this.masterGain) {
+      this.masterGain = ctx.createGain();
+      this.masterGain.gain.value = 0; // default OFF
+      this.masterGain.connect(ctx.destination);
+    }
+    return this.masterGain;
+  }
+
+  setMasterVolume(vol: number) {
+    const gain = this.getMasterGain();
+    gain.gain.setValueAtTime(vol, this.getCtx().currentTime);
+  }
 
   private getCtx(): AudioContext {
     if (!this.ctx) {
@@ -24,7 +40,7 @@ class SoundEngine {
     this.engineGain.gain.value = 0.06;
     
     this.engineOsc.connect(this.engineGain);
-    this.engineGain.connect(ctx.destination);
+    this.engineGain.connect(this.getMasterGain());
     this.engineOsc.start();
     this.isPlaying = true;
   }
@@ -63,9 +79,7 @@ class SoundEngine {
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
     
     osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start();
-    osc.stop(ctx.currentTime + 0.4);
+    gain.connect(this.getMasterGain());
     
     // Crunch noise
     noise.type = 'sawtooth';
@@ -75,8 +89,7 @@ class SoundEngine {
     noiseGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
     
     noise.connect(noiseGain);
-    noiseGain.connect(ctx.destination);
-    noise.start();
+    noiseGain.connect(this.getMasterGain());
     noise.stop(ctx.currentTime + 0.3);
   }
 
@@ -91,9 +104,7 @@ class SoundEngine {
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + (final ? 0.8 : 0.3));
     
     osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start();
-    osc.stop(ctx.currentTime + (final ? 0.8 : 0.3));
+    gain.connect(this.getMasterGain());
   }
 
   playDestroy() {
@@ -108,7 +119,7 @@ class SoundEngine {
       gain.gain.value = 0.15;
       gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1);
       osc.connect(gain);
-      gain.connect(ctx.destination);
+      gain.connect(this.getMasterGain());
       osc.start(ctx.currentTime + i * 0.05);
       osc.stop(ctx.currentTime + 1);
     }

@@ -60,6 +60,7 @@ export const RacingGame = () => {
   const [gameOver, setGameOver] = useState(false);
   const [raceStarted, setRaceStarted] = useState(false);
   const [soundInitialized, setSoundInitialized] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(false);
   const [playerProgress, setPlayerProgress] = useState(0);
   const [lap, setLap] = useState(1);
   const [raceFinished, setRaceFinished] = useState(false);
@@ -89,6 +90,13 @@ export const RacingGame = () => {
       soundEngine.dispose();
     };
   }, []);
+
+  // Mute/unmute based on soundEnabled
+  useEffect(() => {
+    if (soundInitialized) {
+      soundEngine.setMasterVolume(soundEnabled ? 1 : 0);
+    }
+  }, [soundEnabled, soundInitialized]);
 
   // Update engine sound based on speed
   useEffect(() => {
@@ -325,6 +333,13 @@ export const RacingGame = () => {
                 </button>
               ))}
             </div>
+            <button
+              onClick={() => setSoundEnabled(!soundEnabled)}
+              className="mt-8 px-6 py-3 rounded-xl bg-card border-2 border-border text-foreground hover:border-primary hover:bg-primary/10 transition-all pointer-events-auto flex items-center gap-2 mx-auto"
+            >
+              {soundEnabled ? '🔊' : '🔇'}
+              <span className="text-sm font-medium">사운드 {soundEnabled ? 'ON' : 'OFF'}</span>
+            </button>
           </div>
         </div>
       )}
