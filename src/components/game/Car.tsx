@@ -56,8 +56,8 @@ export const Car = ({
 
   useEffect(() => {
     if (carRef.current) {
-      // Start slightly ahead of seam point for clean tangent
-      const startT = 0.005;
+      // Start behind the start line (t=0 is the line, go slightly back)
+      const startT = 0.995;
       const startPoint = trackPath.current.getPointAt(startT);
       const nextPoint = trackPath.current.getPointAt(startT + 0.01);
       const startDir = new THREE.Vector3().subVectors(nextPoint, startPoint).normalize();
