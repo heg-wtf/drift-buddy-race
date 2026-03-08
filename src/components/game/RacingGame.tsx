@@ -117,20 +117,8 @@ export const RacingGame = () => {
     soundEngine.updateEngine(speed);
   }, [speed, raceStarted, soundInitialized]);
 
-  // Play collision sound on damage changes
-  useEffect(() => {
-    if (!soundInitialized) return;
-    const playerDmg = damages.get('player') || 0;
-    const prevDmg = prevDamageRef.current.get('player') || 0;
-    if (playerDmg > prevDmg) {
-      soundEngine.playCollision();
-    }
-    if (playerDmg >= 100 && prevDmg < 100) {
-      soundEngine.playDestroy();
-      soundEngine.stopEngine();
-    }
-    prevDamageRef.current = new Map(damages);
-  }, [damages, soundInitialized]);
+
+
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
