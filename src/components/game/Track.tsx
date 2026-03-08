@@ -252,7 +252,7 @@ export const Track = ({ width = 10 }: TrackProps) => {
     <group>
       {/* Grass ground */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.05, 0]} receiveShadow>
-        <planeGeometry args={[280, 280]} />
+        <planeGeometry args={[400, 400]} />
         <meshStandardMaterial color="#2d5a27" />
       </mesh>
 
