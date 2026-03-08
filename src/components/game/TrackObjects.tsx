@@ -111,65 +111,156 @@ export const Cameramen = () => {
   );
 };
 
-// Random buildings scattered around the track
+// Detailed buildings scattered around the track
 export const TrackBuildings = () => {
   const buildings = useMemo(() => {
-    // Building positions away from track, with size and color
-    const defs: { pos: [number, number, number]; size: [number, number, number]; color: string }[] = [
+    const defs: { pos: [number, number]; w: number; h: number; d: number; color: string; roofType: 'flat' | 'pointed' | 'antenna'; floors: number }[] = [
       // Near start area
-      { pos: [85, 0, -40], size: [8, 12, 10], color: '#6b7280' },
-      { pos: [95, 0, -10], size: [6, 8, 8], color: '#78716c' },
+      { pos: [85, -40], w: 8, h: 12, d: 10, color: '#6b7280', roofType: 'antenna', floors: 4 },
+      { pos: [95, -10], w: 6, h: 8, d: 8, color: '#78716c', roofType: 'pointed', floors: 2 },
       
-      // Far right side near T2
-      { pos: [430, 0, 60], size: [12, 15, 10], color: '#64748b' },
-      { pos: [435, 0, 130], size: [8, 10, 12], color: '#7c8590' },
+      // Far right near T2
+      { pos: [430, 60], w: 12, h: 15, d: 10, color: '#64748b', roofType: 'flat', floors: 5 },
+      { pos: [435, 130], w: 8, h: 10, d: 12, color: '#7c8590', roofType: 'pointed', floors: 3 },
       
-      // Bottom straight area
-      { pos: [180, 0, 155], size: [10, 7, 14], color: '#6d7580' },
-      { pos: [260, 0, 158], size: [14, 9, 8], color: '#8b8e94' },
+      // Bottom straight
+      { pos: [180, 155], w: 10, h: 7, d: 14, color: '#6d7580', roofType: 'flat', floors: 2 },
+      { pos: [260, 158], w: 14, h: 9, d: 8, color: '#8b8e94', roofType: 'flat', floors: 3 },
       
-      // Left side near T4-T5
-      { pos: [-40, 0, 105], size: [7, 11, 9], color: '#71717a' },
-      { pos: [-75, 0, 55], size: [9, 6, 7], color: '#6b7280' },
+      // Left side T4-T5
+      { pos: [-40, 105], w: 7, h: 11, d: 9, color: '#71717a', roofType: 'pointed', floors: 3 },
+      { pos: [-75, 55], w: 9, h: 6, d: 7, color: '#6b7280', roofType: 'flat', floors: 2 },
       
-      // Top left near T8
-      { pos: [-145, 0, -130], size: [10, 14, 10], color: '#64748b' },
-      { pos: [-140, 0, -170], size: [8, 8, 12], color: '#78716c' },
+      // Top left T8
+      { pos: [-145, -130], w: 10, h: 14, d: 10, color: '#64748b', roofType: 'antenna', floors: 4 },
+      { pos: [-140, -170], w: 8, h: 8, d: 12, color: '#78716c', roofType: 'flat', floors: 2 },
       
-      // Top right near T10-T12
-      { pos: [30, 0, -180], size: [12, 10, 8], color: '#7c8590' },
-      { pos: [100, 0, -155], size: [6, 16, 6], color: '#6d7580' },
+      // Top right T10-T12
+      { pos: [30, -180], w: 12, h: 10, d: 8, color: '#7c8590', roofType: 'pointed', floors: 3 },
+      { pos: [100, -155], w: 6, h: 16, d: 6, color: '#6d7580', roofType: 'antenna', floors: 5 },
       
       // Control tower near start
-      { pos: [90, 0, 15], size: [5, 18, 5], color: '#475569' },
+      { pos: [90, 15], w: 5, h: 18, d: 5, color: '#475569', roofType: 'antenna', floors: 6 },
     ];
-
     return defs;
   }, []);
 
   return (
     <group>
-      {buildings.map((b, i) => (
-        <group key={i}>
-          {/* Main building */}
-          <mesh position={[b.pos[0], b.size[1] / 2, b.pos[2]]} castShadow receiveShadow>
-            <boxGeometry args={b.size} />
-            <meshStandardMaterial color={b.color} roughness={0.85} />
-          </mesh>
-          {/* Roof accent */}
-          <mesh position={[b.pos[0], b.size[1] + 0.1, b.pos[2]]}>
-            <boxGeometry args={[b.size[0] + 0.4, 0.2, b.size[2] + 0.4]} />
-            <meshStandardMaterial color="#374151" roughness={0.7} />
-          </mesh>
-          {/* Windows (front face) */}
-          {Array.from({ length: Math.floor(b.size[1] / 3) }).map((_, wi) => (
-            <mesh key={wi} position={[b.pos[0] - b.size[0] / 2 - 0.01, 2 + wi * 3, b.pos[2]]}>
-              <planeGeometry args={[b.size[0] * 0.6, 1.5]} />
-              <meshStandardMaterial color="#93c5fd" emissive="#60a5fa" emissiveIntensity={0.15} metalness={0.8} roughness={0.2} />
+      {buildings.map((b, i) => {
+        const x = b.pos[0];
+        const z = b.pos[1];
+        const floorH = b.h / b.floors;
+
+        return (
+          <group key={i}>
+            {/* Main structure */}
+            <mesh position={[x, b.h / 2, z]} castShadow receiveShadow>
+              <boxGeometry args={[b.w, b.h, b.d]} />
+              <meshStandardMaterial color={b.color} roughness={0.85} />
             </mesh>
-          ))}
-        </group>
-      ))}
+
+            {/* Floor lines (horizontal bands) */}
+            {Array.from({ length: b.floors - 1 }).map((_, fi) => (
+              <mesh key={`fl-${fi}`} position={[x - b.w / 2 - 0.02, (fi + 1) * floorH, z]}>
+                <planeGeometry args={[0.04, b.d * 0.95]} />
+                <meshStandardMaterial color="#555555" />
+              </mesh>
+            ))}
+
+            {/* Windows - front face */}
+            {Array.from({ length: b.floors }).map((_, fi) => {
+              const windowsPerFloor = Math.max(1, Math.floor(b.w / 2.5));
+              return Array.from({ length: windowsPerFloor }).map((_, wi) => {
+                const winW = (b.w * 0.7) / windowsPerFloor;
+                const startX = x - (windowsPerFloor - 1) * winW / 2;
+                return (
+                  <mesh key={`fw-${fi}-${wi}`} position={[startX + wi * winW, floorH * fi + floorH * 0.55, z - b.d / 2 - 0.02]}>
+                    <planeGeometry args={[winW * 0.7, floorH * 0.5]} />
+                    <meshStandardMaterial color="#93c5fd" emissive="#60a5fa" emissiveIntensity={0.1} metalness={0.8} roughness={0.2} />
+                  </mesh>
+                );
+              });
+            })}
+
+            {/* Windows - back face */}
+            {Array.from({ length: b.floors }).map((_, fi) => {
+              const windowsPerFloor = Math.max(1, Math.floor(b.w / 2.5));
+              return Array.from({ length: windowsPerFloor }).map((_, wi) => {
+                const winW = (b.w * 0.7) / windowsPerFloor;
+                const startX = x - (windowsPerFloor - 1) * winW / 2;
+                return (
+                  <mesh key={`bw-${fi}-${wi}`} position={[startX + wi * winW, floorH * fi + floorH * 0.55, z + b.d / 2 + 0.02]} rotation={[0, Math.PI, 0]}>
+                    <planeGeometry args={[winW * 0.7, floorH * 0.5]} />
+                    <meshStandardMaterial color="#93c5fd" emissive="#60a5fa" emissiveIntensity={0.1} metalness={0.8} roughness={0.2} />
+                  </mesh>
+                );
+              });
+            })}
+
+            {/* Windows - side faces */}
+            {Array.from({ length: b.floors }).map((_, fi) => {
+              const windowsPerFloor = Math.max(1, Math.floor(b.d / 2.5));
+              return Array.from({ length: windowsPerFloor }).map((_, wi) => {
+                const winW = (b.d * 0.7) / windowsPerFloor;
+                const startZ = z - (windowsPerFloor - 1) * winW / 2;
+                return (
+                  <group key={`sw-${fi}-${wi}`}>
+                    <mesh position={[x - b.w / 2 - 0.02, floorH * fi + floorH * 0.55, startZ + wi * winW]} rotation={[0, Math.PI / 2, 0]}>
+                      <planeGeometry args={[winW * 0.7, floorH * 0.5]} />
+                      <meshStandardMaterial color="#93c5fd" emissive="#60a5fa" emissiveIntensity={0.1} metalness={0.8} roughness={0.2} />
+                    </mesh>
+                    <mesh position={[x + b.w / 2 + 0.02, floorH * fi + floorH * 0.55, startZ + wi * winW]} rotation={[0, -Math.PI / 2, 0]}>
+                      <planeGeometry args={[winW * 0.7, floorH * 0.5]} />
+                      <meshStandardMaterial color="#93c5fd" emissive="#60a5fa" emissiveIntensity={0.1} metalness={0.8} roughness={0.2} />
+                    </mesh>
+                  </group>
+                );
+              });
+            })}
+
+            {/* Roof cornice */}
+            <mesh position={[x, b.h + 0.15, z]}>
+              <boxGeometry args={[b.w + 0.5, 0.3, b.d + 0.5]} />
+              <meshStandardMaterial color="#374151" roughness={0.7} />
+            </mesh>
+
+            {/* Roof type */}
+            {b.roofType === 'pointed' && (
+              <mesh position={[x, b.h + 0.3 + b.w * 0.2, z]} castShadow>
+                <coneGeometry args={[Math.min(b.w, b.d) * 0.6, b.w * 0.4, 4]} />
+                <meshStandardMaterial color="#8b4513" roughness={0.9} />
+              </mesh>
+            )}
+
+            {b.roofType === 'antenna' && (
+              <group>
+                {/* AC units on roof */}
+                <mesh position={[x + 1, b.h + 0.6, z]} castShadow>
+                  <boxGeometry args={[1.2, 0.8, 1.2]} />
+                  <meshStandardMaterial color="#9ca3af" metalness={0.4} roughness={0.5} />
+                </mesh>
+                {/* Antenna */}
+                <mesh position={[x - 1, b.h + 2, z]}>
+                  <cylinderGeometry args={[0.05, 0.05, 4, 6]} />
+                  <meshStandardMaterial color="#666666" metalness={0.6} />
+                </mesh>
+                {/* Antenna dish */}
+                <mesh position={[x - 1, b.h + 3.5, z]} rotation={[0.3, 0, 0]}>
+                  <sphereGeometry args={[0.3, 8, 8, 0, Math.PI]} />
+                  <meshStandardMaterial color="#aaaaaa" metalness={0.7} roughness={0.3} />
+                </mesh>
+              </group>
+            )}
+
+            {/* Door at ground level */}
+            <mesh position={[x, 1, z - b.d / 2 - 0.02]}>
+              <planeGeometry args={[1.5, 2]} />
+              <meshStandardMaterial color="#4a3728" roughness={0.9} />
+            </mesh>
+          </group>
+        );
+      })}
     </group>
   );
 };
