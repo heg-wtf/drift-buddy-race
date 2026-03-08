@@ -9,7 +9,7 @@ import { Minimap } from './Minimap';
 import { StartCountdown } from './StartCountdown';
 import { soundEngine } from './SoundEngine';
 
-const AI_COLORS = ['#ff3333', '#ffcc00', '#00aaff', '#ff6600'];
+const AI_COLORS: string[] = []; // No AI cars
 const TRACK_WIDTH = 20;
 const TOTAL_LAPS = 10;
 
