@@ -394,8 +394,6 @@ export const RacingGame = () => {
       
       <GameHUD
         speed={speed}
-        position={1}
-        totalCars={5}
         lap={currentLap}
         totalLaps={totalLaps || 10}
         boostAvailable={!boostUsedThisLap}

@@ -1,14 +1,12 @@
 interface GameHUDProps {
   speed: number;
-  position: number;
-  totalCars: number;
   lap: number;
   totalLaps?: number;
   boostAvailable?: boolean;
   boostActive?: boolean;
 }
 
-export const GameHUD = ({ speed, position, totalCars, lap, totalLaps = 10, boostAvailable = true, boostActive = false }: GameHUDProps) => {
+export const GameHUD = ({ speed, lap, totalLaps = 10, boostAvailable = true, boostActive = false }: GameHUDProps) => {
   return (
     <div className="absolute inset-0 pointer-events-none">
       {/* Speed + Boost stack */}
@@ -44,14 +42,6 @@ export const GameHUD = ({ speed, position, totalCars, lap, totalLaps = 10, boost
           </div>
         </div>
         
-        {/* Position display */}
-        <div className="bg-card/80 backdrop-blur-sm rounded-lg p-4 border border-secondary/30">
-          <div className="text-muted-foreground text-sm mb-1">Position</div>
-          <div className="text-2xl font-bold text-secondary font-mono">
-            {position}
-            <span className="text-lg text-muted-foreground">/{totalCars}</span>
-          </div>
-        </div>
       </div>
       
       {/* Controls hint */}
