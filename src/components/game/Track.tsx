@@ -31,7 +31,7 @@ const FIGURE_8_POINTS = [
 
 export const getTrackPath = () => {
   const curve = new THREE.CatmullRomCurve3(
-    SILVERSTONE_POINTS.map(p => new THREE.Vector3(p.x, 0, p.z)),
+    FIGURE_8_POINTS.map(p => new THREE.Vector3(p.x, 0, p.z)),
     true,
     'catmullrom',
     0.5
