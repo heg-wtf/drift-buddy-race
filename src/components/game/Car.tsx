@@ -176,7 +176,7 @@ export const Car = ({
       knockbackVelocity.current.add(wallCheck.normal.multiplyScalar(0.2));
       
       if (onDamage && Math.abs(velocity.current) > 0.05) {
-        onDamage(id, Math.abs(velocity.current) * 20);
+        onDamage(id, 10);
       }
       
       velocity.current *= 0.3;
