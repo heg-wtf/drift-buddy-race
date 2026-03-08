@@ -334,17 +334,54 @@ export const RacingGame = () => {
         trackWidth={TRACK_WIDTH}
       />
 
+      {/* Lap time flash */}
+      {showLastLap && lastLapTime !== null && !raceFinished && (
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 z-40 animate-pulse">
+          <div className="bg-card/90 backdrop-blur-sm rounded-xl px-6 py-3 border border-border">
+            <p className="text-sm text-muted-foreground">랩 {lap - 1} 완료</p>
+            <p className="text-3xl font-bold text-primary font-mono">{formatTime(lastLapTime)}</p>
+          </div>
+        </div>
+      )}
+
       {/* Race Finished overlay */}
       {raceFinished && (
-        <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="text-center">
-            <h2 className="text-5xl font-bold text-primary mb-4">🏁 레이스 완료!</h2>
-            <p className="text-xl text-muted-foreground mb-8">{totalLaps}랩을 완주했습니다!</p>
+        <div className="absolute inset-0 bg-background/90 backdrop-blur-md flex items-center justify-center z-50">
+          <div className="text-center max-w-md w-full">
+            <h2 className="text-5xl font-bold text-primary mb-2">🏁 레이스 완료!</h2>
+            <p className="text-lg text-muted-foreground mb-6">{totalLaps}랩 완주</p>
+            
+            {/* Lap times table */}
+            <div className="bg-card/80 rounded-xl border border-border p-4 mb-6 text-left">
+              <div className="grid grid-cols-2 gap-1 mb-3">
+                {lapTimes.map((time, i) => (
+                  <div key={i} className="flex justify-between px-3 py-1.5 rounded-md odd:bg-muted/30">
+                    <span className="text-sm text-muted-foreground">랩 {i + 1}</span>
+                    <span className={`text-sm font-mono font-bold ${time === Math.min(...lapTimes) ? 'text-primary' : 'text-foreground'}`}>
+                      {formatTime(time)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <div className="border-t border-border pt-3 flex justify-between px-3">
+                <span className="text-sm font-bold text-muted-foreground">총 시간</span>
+                <span className="text-sm font-mono font-bold text-primary">
+                  {formatTime(lapTimes.reduce((a, b) => a + b, 0))}
+                </span>
+              </div>
+              <div className="flex justify-between px-3 mt-1">
+                <span className="text-sm font-bold text-muted-foreground">베스트 랩</span>
+                <span className="text-sm font-mono font-bold text-primary">
+                  {formatTime(Math.min(...lapTimes))}
+                </span>
+              </div>
+            </div>
+            
             <button 
-              onClick={() => window.location.reload()}
+              onClick={handleRestart}
               className="px-8 py-4 bg-primary text-primary-foreground rounded-lg text-xl font-bold hover:opacity-90 transition-opacity pointer-events-auto"
             >
-              다시 시작 (R)
+              다시 시작
             </button>
           </div>
         </div>
@@ -352,15 +389,27 @@ export const RacingGame = () => {
 
       {/* Game Over overlay */}
       {gameOver && !raceFinished && (
-        <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="text-center">
+        <div className="absolute inset-0 bg-background/90 backdrop-blur-md flex items-center justify-center z-50">
+          <div className="text-center max-w-md w-full">
             <h2 className="text-5xl font-bold text-destructive mb-4">차량 파괴!</h2>
-            <p className="text-xl text-muted-foreground mb-8">충돌로 인해 차량이 파괴되었습니다</p>
+            <p className="text-xl text-muted-foreground mb-4">충돌로 인해 차량이 파괴되었습니다</p>
+            
+            {lapTimes.length > 0 && (
+              <div className="bg-card/80 rounded-xl border border-border p-4 mb-6 text-left">
+                {lapTimes.map((time, i) => (
+                  <div key={i} className="flex justify-between px-3 py-1.5">
+                    <span className="text-sm text-muted-foreground">랩 {i + 1}</span>
+                    <span className="text-sm font-mono font-bold text-foreground">{formatTime(time)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            
             <button 
-              onClick={() => window.location.reload()}
+              onClick={handleRestart}
               className="px-8 py-4 bg-primary text-primary-foreground rounded-lg text-xl font-bold hover:opacity-90 transition-opacity pointer-events-auto"
             >
-              다시 시작 (R)
+              다시 시작
             </button>
           </div>
         </div>
