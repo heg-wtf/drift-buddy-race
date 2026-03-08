@@ -63,8 +63,6 @@ export const RacingGame = () => {
   const [playerRotation, setPlayerRotation] = useState(0);
   const [speed, setSpeed] = useState(0);
   const [carPositions, setCarPositions] = useState<Map<string, THREE.Vector3>>(new Map());
-  const [damages, setDamages] = useState<Map<string, number>>(new Map());
-  const [gameOver, setGameOver] = useState(false);
   const [raceStarted, setRaceStarted] = useState(false);
   const [soundInitialized, setSoundInitialized] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(false);
@@ -84,7 +82,7 @@ export const RacingGame = () => {
   const lapStartTimeRef = useRef(0);
   const raceStartTimeRef = useRef(0);
   const prevProgressRef = useRef(0);
-  const prevDamageRef = useRef<Map<string, number>>(new Map());
+  
   
   // Initialize sound on first user interaction
   useEffect(() => {
@@ -118,20 +116,8 @@ export const RacingGame = () => {
     soundEngine.updateEngine(speed);
   }, [speed, raceStarted, soundInitialized]);
 
-  // Play collision sound on damage changes
-  useEffect(() => {
-    if (!soundInitialized) return;
-    const playerDmg = damages.get('player') || 0;
-    const prevDmg = prevDamageRef.current.get('player') || 0;
-    if (playerDmg > prevDmg) {
-      soundEngine.playCollision();
-    }
-    if (playerDmg >= 100 && prevDmg < 100) {
-      soundEngine.playDestroy();
-      soundEngine.stopEngine();
-    }
-    prevDamageRef.current = new Map(damages);
-  }, [damages, soundInitialized]);
+
+
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -247,20 +233,8 @@ export const RacingGame = () => {
     });
   }, []);
 
-  const handleDamage = useCallback((id: string, amount: number) => {
-    setDamages(prev => {
-      const newMap = new Map(prev);
-      const current = newMap.get(id) || 0;
-      const newDamage = Math.min(current + amount, 100);
-      newMap.set(id, newDamage);
-      
-      if (id === 'player' && newDamage >= 100) {
-        setGameOver(true);
-      }
-      
-      return newMap;
-    });
-  }, []);
+
+
 
   const handleRaceStart = useCallback(() => {
     setRaceStarted(true);
@@ -278,7 +252,6 @@ export const RacingGame = () => {
     }
   }, [soundInitialized]);
 
-  const playerDamage = damages.get('player') || 0;
   const currentLap = Math.min(lap, totalLaps || 10);
 
   return (
@@ -322,8 +295,6 @@ export const RacingGame = () => {
           onUpdate={handlePlayerUpdate}
           onPositionUpdate={handlePositionUpdate}
           otherCars={carPositions}
-          damage={playerDamage}
-          onDamage={handleDamage}
           trackWidth={TRACK_WIDTH}
           raceStarted={raceStarted && !raceFinished}
         />
@@ -336,9 +307,7 @@ export const RacingGame = () => {
             color={color}
             aiIndex={index}
             onPositionUpdate={handlePositionUpdate}
-            otherCars={carPositions}
-            damage={damages.get(`ai-${index}`) || 0}
-            onDamage={handleDamage}
+          otherCars={carPositions}
             trackWidth={TRACK_WIDTH}
             raceStarted={raceStarted && !raceFinished}
             playerProgress={playerProgress}
@@ -425,7 +394,6 @@ export const RacingGame = () => {
         totalCars={5}
         lap={currentLap}
         totalLaps={totalLaps || 10}
-        damage={playerDamage}
         boostAvailable={!boostUsedThisLap}
         boostActive={boostActive}
       />
@@ -506,33 +474,6 @@ export const RacingGame = () => {
         </div>
       )}
 
-      {/* Game Over overlay */}
-      {gameOver && !raceFinished && (
-        <div className="absolute inset-0 bg-background/90 backdrop-blur-md flex items-center justify-center z-50">
-          <div className="text-center max-w-md w-full">
-            <h2 className="text-5xl font-bold text-destructive mb-4">차량 파괴!</h2>
-            <p className="text-xl text-muted-foreground mb-4">충돌로 인해 차량이 파괴되었습니다</p>
-            
-            {lapTimes.length > 0 && (
-              <div className="bg-card/80 rounded-xl border border-border p-4 mb-6 text-left">
-                {lapTimes.map((time, i) => (
-                  <div key={i} className="flex justify-between px-3 py-1.5">
-                    <span className="text-sm text-muted-foreground">랩 {i + 1}</span>
-                    <span className="text-sm font-mono font-bold text-foreground">{formatTime(time)}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-            
-            <button 
-              onClick={handleRestart}
-              className="px-8 py-4 bg-primary text-primary-foreground rounded-lg text-xl font-bold hover:opacity-90 transition-opacity pointer-events-auto"
-            >
-              다시 시작
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

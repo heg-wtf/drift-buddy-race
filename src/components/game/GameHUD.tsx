@@ -4,14 +4,11 @@ interface GameHUDProps {
   totalCars: number;
   lap: number;
   totalLaps?: number;
-  damage?: number;
   boostAvailable?: boolean;
   boostActive?: boolean;
 }
 
-export const GameHUD = ({ speed, position, totalCars, lap, totalLaps = 10, damage = 0, boostAvailable = true, boostActive = false }: GameHUDProps) => {
-  const damageColor = damage > 70 ? 'text-destructive' : damage > 40 ? 'text-accent' : 'text-primary';
-  
+export const GameHUD = ({ speed, position, totalCars, lap, totalLaps = 10, boostAvailable = true, boostActive = false }: GameHUDProps) => {
   return (
     <div className="absolute inset-0 pointer-events-none">
       {/* Speed + Boost stack */}
@@ -36,23 +33,6 @@ export const GameHUD = ({ speed, position, totalCars, lap, totalLaps = 10, damag
           </div>
         </div>
       </div>
-
-      {/* Damage display */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-card/80 backdrop-blur-sm rounded-lg p-4 border border-destructive/30">
-        <div className="text-muted-foreground text-sm mb-1">차량 상태</div>
-        <div className="w-48 h-4 bg-muted rounded-full overflow-hidden">
-          <div 
-            className="h-full transition-all duration-300"
-            style={{ 
-              width: `${100 - damage}%`,
-              backgroundColor: damage > 70 ? 'hsl(var(--destructive))' : damage > 40 ? 'hsl(var(--accent))' : 'hsl(var(--primary))'
-            }}
-          />
-        </div>
-        <div className={`text-center text-sm font-bold mt-1 ${damageColor}`}>
-          {Math.round(100 - damage)}%
-        </div>
-      </div>
       
       {/* Top-left info panel: Lap and Position */}
       <div className="absolute top-8 left-8 space-y-3">
@@ -73,15 +53,6 @@ export const GameHUD = ({ speed, position, totalCars, lap, totalLaps = 10, damag
           </div>
         </div>
       </div>
-
-      {/* Damage warning */}
-      {damage > 50 && (
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-          <div className={`text-2xl font-bold animate-pulse ${damage > 70 ? 'text-destructive' : 'text-accent'}`}>
-            {damage > 70 ? '⚠️ 심각한 손상!' : '⚠️ 차량 손상'}
-          </div>
-        </div>
-      )}
       
       {/* Controls hint */}
       <div className="absolute bottom-8 right-8 bg-card/80 backdrop-blur-sm rounded-lg p-4 border border-border">

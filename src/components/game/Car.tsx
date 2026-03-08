@@ -19,8 +19,6 @@ interface CarProps {
   aiIndex?: number;
   id: string;
   otherCars?: Map<string, THREE.Vector3>;
-  damage?: number;
-  onDamage?: (id: string, amount: number) => void;
   trackWidth?: number;
   raceStarted?: boolean;
   playerProgress?: number;
@@ -36,8 +34,6 @@ export const Car = ({
   aiIndex = 0,
   id,
   otherCars,
-  damage = 0,
-  onDamage,
   trackWidth = 10,
   raceStarted = false,
   playerProgress = 0
@@ -163,11 +159,6 @@ export const Car = ({
         if (distance < 2.5) {
           const pushDir = carRef.current!.position.clone().sub(otherPos).normalize();
           knockbackVelocity.current.add(pushDir.multiplyScalar(0.25));
-          
-          if (onDamage && Math.abs(velocity.current) > 0.05) {
-            onDamage(id, 10);
-          }
-          
           velocity.current *= 0.4;
           sparkTime.current = 0.5;
         }
@@ -178,11 +169,6 @@ export const Car = ({
     const wallCheck = checkWallCollision(carRef.current.position);
     if (wallCheck.hit) {
       knockbackVelocity.current.add(wallCheck.normal.multiplyScalar(0.2));
-      
-      if (onDamage && Math.abs(velocity.current) > 0.05) {
-        onDamage(id, 10);
-      }
-      
       velocity.current *= 0.3;
       sparkTime.current = 0.3;
     }
@@ -197,7 +183,6 @@ export const Car = ({
       sparksRef.current.visible = false;
     }
 
-    if (damage >= 100) return;
     if (!raceStarted) return;
 
     if (isPlayer && controls) {
@@ -312,8 +297,6 @@ export const Car = ({
     }
   });
 
-  const isDestroyed = damage >= 100;
-  const damageLevel = Math.min(damage / 100, 1);
   const isBoosting = isPlayer && controls?.boost;
 
   const sparkPositions = new Float32Array(30 * 3);
@@ -346,18 +329,15 @@ export const Car = ({
         <pointsMaterial color="#ffaa00" size={0.15} transparent opacity={0.8} />
       </points>
 
-      {!isDestroyed ? (
-        <>
-          {/* F1 Race Car Body - Main chassis */}
-          <mesh 
-            position={[0, 0.25, 0]} 
-            castShadow
-            scale={[1 - damageLevel * 0.1, 1 - damageLevel * 0.15, 1]}
-            rotation={[damageLevel * 0.05, 0, damageLevel * 0.1]}
-          >
-            <boxGeometry args={[0.9, 0.25, 3.2]} />
-            <meshStandardMaterial color={color} metalness={0.4} roughness={0.35} />
-          </mesh>
+      <>
+        {/* F1 Race Car Body - Main chassis */}
+        <mesh 
+          position={[0, 0.25, 0]} 
+          castShadow
+        >
+          <boxGeometry args={[0.9, 0.25, 3.2]} />
+          <meshStandardMaterial color={color} metalness={0.4} roughness={0.35} />
+        </mesh>
           
           {/* Nose cone */}
           <mesh position={[0, 0.2, 1.8]} rotation={[-Math.PI / 2, 0, 0]} castShadow>
@@ -418,34 +398,19 @@ export const Car = ({
             [-0.65, 0.2, 1.1], [0.65, 0.2, 1.1],  // Front
             [-0.65, 0.25, -1.0], [0.65, 0.25, -1.0]  // Rear
           ].map((pos, i) => (
-            damageLevel < 0.4 + i * 0.15 && (
-              <group key={i} position={pos as [number, number, number]}>
-                {/* Tire */}
-                <mesh rotation={[0, 0, Math.PI / 2]} castShadow>
-                  <cylinderGeometry args={[i < 2 ? 0.22 : 0.28, i < 2 ? 0.22 : 0.28, 0.18, 16]} />
-                  <meshStandardMaterial color="#1a1a1a" roughness={0.9} />
-                </mesh>
-                {/* Rim */}
-                <mesh rotation={[0, 0, Math.PI / 2]}>
-                  <cylinderGeometry args={[0.12, 0.12, 0.19, 8]} />
-                  <meshStandardMaterial color="#c0c0c0" metalness={0.9} roughness={0.1} />
-                </mesh>
-              </group>
-            )
+            <group key={i} position={pos as [number, number, number]}>
+              {/* Tire */}
+              <mesh rotation={[0, 0, Math.PI / 2]} castShadow>
+                <cylinderGeometry args={[i < 2 ? 0.22 : 0.28, i < 2 ? 0.22 : 0.28, 0.18, 16]} />
+                <meshStandardMaterial color="#1a1a1a" roughness={0.9} />
+              </mesh>
+              {/* Rim */}
+              <mesh rotation={[0, 0, Math.PI / 2]}>
+                <cylinderGeometry args={[0.12, 0.12, 0.19, 8]} />
+                <meshStandardMaterial color="#c0c0c0" metalness={0.9} roughness={0.1} />
+              </mesh>
+            </group>
           ))}
-
-          {/* Damage smoke */}
-          {damageLevel > 0.3 && (
-            <mesh position={[0, 0.8, -0.5]}>
-              <sphereGeometry args={[0.25 + damageLevel * 0.25, 8, 8]} />
-              <meshStandardMaterial color="#444" transparent opacity={0.5 * damageLevel} />
-            </mesh>
-          )}
-
-          {/* Fire when heavily damaged */}
-          {damageLevel > 0.7 && (
-            <pointLight position={[0, 0.5, -1]} intensity={4} distance={5} color="#ff4400" />
-          )}
 
           {/* Boost flames */}
           {isBoosting && (
@@ -488,26 +453,6 @@ export const Car = ({
             </group>
           )}
         </>
-      ) : (
-        /* Destroyed car wreckage */
-        <>
-          <mesh position={[0, 0.15, 0]} rotation={[0.2, 0.3, 0.4]}>
-            <boxGeometry args={[1, 0.2, 2.5]} />
-            <meshStandardMaterial color="#111" metalness={0.3} roughness={0.9} />
-          </mesh>
-          {[...Array(6)].map((_, i) => (
-            <mesh 
-              key={i} 
-              position={[(Math.random() - 0.5) * 4, 0.1, (Math.random() - 0.5) * 4]}
-              rotation={[Math.random() * 2, Math.random() * 2, Math.random() * 2]}
-            >
-              <boxGeometry args={[0.3 + Math.random() * 0.2, 0.15, 0.4 + Math.random() * 0.2]} />
-              <meshStandardMaterial color={color} metalness={0.5} roughness={0.7} />
-            </mesh>
-          ))}
-          <pointLight position={[0, 0.5, 0]} intensity={6} distance={8} color="#ff2200" />
-        </>
-      )}
     </group>
   );
 };
