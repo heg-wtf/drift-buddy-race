@@ -5,6 +5,9 @@ import * as THREE from 'three';
 import { Car } from './Car';
 import { Track } from './Track';
 import { GameHUD } from './GameHUD';
+import { Minimap } from './Minimap';
+import { StartCountdown } from './StartCountdown';
+import { soundEngine } from './SoundEngine';
 
 const AI_COLORS = ['#ff3333', '#ffcc00', '#00aaff', '#ff6600'];
 const TRACK_WIDTH = 10;
@@ -47,9 +50,53 @@ export const RacingGame = () => {
   const [carPositions, setCarPositions] = useState<Map<string, THREE.Vector3>>(new Map());
   const [damages, setDamages] = useState<Map<string, number>>(new Map());
   const [gameOver, setGameOver] = useState(false);
+  const [raceStarted, setRaceStarted] = useState(false);
+  const [soundInitialized, setSoundInitialized] = useState(false);
+  const prevDamageRef = useRef<Map<string, number>>(new Map());
+
+  // Initialize sound on first user interaction
+  useEffect(() => {
+    const initSound = () => {
+      soundEngine.resume();
+      setSoundInitialized(true);
+      window.removeEventListener('click', initSound);
+      window.removeEventListener('keydown', initSound);
+    };
+    window.addEventListener('click', initSound);
+    window.addEventListener('keydown', initSound);
+    return () => {
+      window.removeEventListener('click', initSound);
+      window.removeEventListener('keydown', initSound);
+      soundEngine.dispose();
+    };
+  }, []);
+
+  // Update engine sound based on speed
+  useEffect(() => {
+    if (raceStarted && soundInitialized) {
+      soundEngine.startEngine();
+    }
+    soundEngine.updateEngine(speed);
+  }, [speed, raceStarted, soundInitialized]);
+
+  // Play collision sound on damage changes
+  useEffect(() => {
+    if (!soundInitialized) return;
+    const playerDmg = damages.get('player') || 0;
+    const prevDmg = prevDamageRef.current.get('player') || 0;
+    if (playerDmg > prevDmg) {
+      soundEngine.playCollision();
+    }
+    if (playerDmg >= 100 && prevDmg < 100) {
+      soundEngine.playDestroy();
+      soundEngine.stopEngine();
+    }
+    prevDamageRef.current = new Map(damages);
+  }, [damages, soundInitialized]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (!raceStarted) return;
       switch (e.key.toLowerCase()) {
         case 'w':
         case 'arrowup':
@@ -101,7 +148,7 @@ export const RacingGame = () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, []);
+  }, [raceStarted]);
 
   const handlePlayerUpdate = (position: THREE.Vector3, rotation: number, currentSpeed: number) => {
     setPlayerPosition(position);
@@ -131,6 +178,16 @@ export const RacingGame = () => {
       return newMap;
     });
   }, []);
+
+  const handleRaceStart = useCallback(() => {
+    setRaceStarted(true);
+  }, []);
+
+  const handleCountdownBeep = useCallback((final: boolean) => {
+    if (soundInitialized) {
+      soundEngine.playCountdownBeep(final);
+    }
+  }, [soundInitialized]);
 
   const playerDamage = damages.get('player') || 0;
 
@@ -176,13 +233,14 @@ export const RacingGame = () => {
           position={[0, 0, 0]}
           color="#00ff88"
           isPlayer
-          controls={controls}
+          controls={raceStarted ? controls : { forward: false, backward: false, left: false, right: false }}
           onUpdate={handlePlayerUpdate}
           onPositionUpdate={handlePositionUpdate}
           otherCars={carPositions}
           damage={playerDamage}
           onDamage={handleDamage}
           trackWidth={TRACK_WIDTH}
+          raceStarted={raceStarted}
         />
         
         {/* AI cars */}
@@ -198,9 +256,13 @@ export const RacingGame = () => {
             damage={damages.get(`ai-${index}`) || 0}
             onDamage={handleDamage}
             trackWidth={TRACK_WIDTH}
+            raceStarted={raceStarted}
           />
         ))}
       </Canvas>
+      
+      {/* Start countdown */}
+      <StartCountdown onStart={handleRaceStart} onBeep={handleCountdownBeep} />
       
       <GameHUD
         speed={speed}
@@ -210,15 +272,22 @@ export const RacingGame = () => {
         damage={playerDamage}
       />
 
+      {/* Minimap */}
+      <Minimap 
+        carPositions={carPositions} 
+        playerPosition={playerPosition}
+        trackWidth={TRACK_WIDTH}
+      />
+
       {/* Game Over overlay */}
       {gameOver && (
-        <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center">
+        <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="text-center">
             <h2 className="text-5xl font-bold text-destructive mb-4">차량 파괴!</h2>
             <p className="text-xl text-muted-foreground mb-8">충돌로 인해 차량이 파괴되었습니다</p>
             <button 
               onClick={() => window.location.reload()}
-              className="px-8 py-4 bg-primary text-primary-foreground rounded-lg text-xl font-bold hover:opacity-90 transition-opacity"
+              className="px-8 py-4 bg-primary text-primary-foreground rounded-lg text-xl font-bold hover:opacity-90 transition-opacity pointer-events-auto"
             >
               다시 시작 (R)
             </button>
