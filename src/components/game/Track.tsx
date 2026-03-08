@@ -10,79 +10,78 @@ const createIstanbulParkPoints = () => {
   // Istanbul Park — remapped to match the provided reference silhouette
   // Wide layout, long T1→T2 straight, pronounced left T8, broader T9–T12 top section
   const pts: [number, number][] = [
-    // START/FINISH straight (heading down)
+    // START/FINISH straight (heading down, +z = south)
     [40, -35],
     [40, 0],
     [40, 40],
 
-    // T1 — gentle right into bottom straight
-    [55, 65],
-    [85, 80],
+    // T1 — gentle right
+    [58, 65],
+    [88, 80],
 
-    // T1→T2 long bottom straight (very wide, z≈86–90)
-    [140, 88],
-    [200, 90],
-    [280, 88],
-    [345, 82],
+    // Bottom straight going far right (z≈85–88)
+    [140, 86],
+    [210, 88],
+    [280, 86],
+    [340, 80],
 
-    // T2 — big hairpin at far right
-    [385, 72],
-    [400, 52],
-    [390, 32],
-    [365, 22],
+    // T2 — big hairpin at far right (U-turn, exit BELOW outbound)
+    [375, 75],
+    [398, 84],
+    [408, 100],
+    [398, 116],
+    [375, 124],
 
-    // Return left (z≈18–24, well above outbound z≈88)
-    [320, 18],
-    [250, 16],
-    [180, 18],
-    [120, 22],
+    // Return left BELOW outbound (z≈126–128, 38+ units below outbound)
+    [340, 128],
+    [280, 130],
+    [210, 128],
+    [150, 124],
 
-    // T3 — continue left, staying LOW (z≈24–30, no crossing with T1 at z≈65–80)
-    [80, 26],
-    [50, 28],
-    [20, 30],
-    [-10, 28],
+    // T3 — continue left, staying well south of T1 (z≈118–108)
+    [100, 118],
+    [60, 108],
 
-    // T4 — turn down-left toward T5 (z stays ≤ 40, well below T1)
-    [-35, 22],
-    [-55, 10],
+    // T4 — curve up-left (stays south of start straight z=0–40)
+    [20, 92],
+    [-15, 70],
 
-    // T5 — sharp left heading up
-    [-70, -8],
-    [-80, -30],
+    // T5 — heading up
+    [-40, 44],
+    [-55, 18],
 
     // T6–T7 up the left side
-    [-90, -55],
-    [-98, -80],
+    [-68, -10],
+    [-80, -40],
+    [-90, -68],
 
-    // T8 — multi-apex left sweeper (extends far left)
-    [-110, -105],
-    [-125, -130],
-    [-120, -155],
-    [-100, -170],
+    // T8 — multi-apex left sweeper
+    [-102, -95],
+    [-118, -120],
+    [-112, -148],
+    [-92, -162],
 
     // T9 — hairpin at top-left
-    [-72, -178],
-    [-42, -172],
+    [-62, -170],
+    [-35, -164],
 
     // T10 heading right across top
-    [-10, -158],
-    [20, -148],
+    [-8, -150],
+    [18, -140],
 
-    // T11 — kink / chicane
-    [45, -142],
-    [65, -138],
+    // T11 — kink
+    [42, -134],
+    [62, -130],
 
-    // T12 — sharp right
-    [82, -134],
-    [90, -120],
-    [80, -105],
+    // T12 — sharp right heading down
+    [80, -126],
+    [86, -110],
+    [76, -92],
 
     // T13 — heading down back to start
-    [65, -82],
-    [55, -58],
-    [48, -40],
-    [42, -38],
+    [62, -68],
+    [52, -48],
+    [44, -38],
   ];
 
   return pts.map(([x, z]) => new THREE.Vector3(x, 0, z));
