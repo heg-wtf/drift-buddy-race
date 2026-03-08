@@ -340,6 +340,7 @@ export const RacingGame = () => {
               {soundEnabled ? '🔊' : '🔇'}
               <span className="text-sm font-medium">사운드 {soundEnabled ? 'ON' : 'OFF'}</span>
             </button>
+          </div>
         </div>
       )}
 
