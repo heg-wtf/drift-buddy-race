@@ -13,7 +13,7 @@ interface CarProps {
     left: boolean;
     right: boolean;
   };
-  onUpdate?: (position: THREE.Vector3, rotation: number, speed: number) => void;
+  onUpdate?: (position: THREE.Vector3, rotation: number, speed: number, trackProgress: number) => void;
   onPositionUpdate?: (id: string, position: THREE.Vector3) => void;
   aiIndex?: number;
   id: string;
@@ -22,6 +22,7 @@ interface CarProps {
   onDamage?: (id: string, amount: number) => void;
   trackWidth?: number;
   raceStarted?: boolean;
+  playerProgress?: number;
 }
 
 export const Car = ({ 
