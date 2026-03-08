@@ -7,7 +7,7 @@ interface GameHUDProps {
   damage?: number;
 }
 
-export const GameHUD = ({ speed, position, totalCars, lap, damage = 0 }: GameHUDProps) => {
+export const GameHUD = ({ speed, position, totalCars, lap, totalLaps = 10, damage = 0 }: GameHUDProps) => {
   const damageColor = damage > 70 ? 'text-destructive' : damage > 40 ? 'text-accent' : 'text-primary';
   
   return (
