@@ -77,11 +77,13 @@ export const RacingGame = () => {
   const [lapTimes, setLapTimes] = useState<number[]>([]);
   const [lastLapTime, setLastLapTime] = useState<number | null>(null);
   const [showLastLap, setShowLastLap] = useState(false);
+  const [boostUsedThisLap, setBoostUsedThisLap] = useState(false);
+  const [boostActive, setBoostActive] = useState(false);
   const lapStartTimeRef = useRef(0);
   const raceStartTimeRef = useRef(0);
   const prevProgressRef = useRef(0);
   const prevDamageRef = useRef<Map<string, number>>(new Map());
-
+  
   // Initialize sound on first user interaction
   useEffect(() => {
     const initSound = () => {
