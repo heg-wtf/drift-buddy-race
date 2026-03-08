@@ -63,7 +63,7 @@ export const Minimap = ({ carPositions, playerPosition, trackWidth = 10, playerC
   }, [trackPoints, bounds, scale, offsetX, offsetY]);
 
   const carColors: Record<string, string> = {
-    player: '#00ff88',
+    player: playerColor,
     'ai-0': '#ff3333',
     'ai-1': '#ffcc00',
     'ai-2': '#00aaff',
