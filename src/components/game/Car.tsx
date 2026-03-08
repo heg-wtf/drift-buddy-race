@@ -342,13 +342,13 @@ export const Car = ({
             rotation={[damageLevel * 0.05, 0, damageLevel * 0.1]}
           >
             <boxGeometry args={[0.9, 0.25, 3.2]} />
-            <meshStandardMaterial color={color} metalness={0.9} roughness={0.15} />
+            <meshStandardMaterial color={color} metalness={0.4} roughness={0.35} />
           </mesh>
           
           {/* Nose cone */}
           <mesh position={[0, 0.2, 1.8]} rotation={[-Math.PI / 2, 0, 0]} castShadow>
             <coneGeometry args={[0.3, 0.8, 8]} />
-            <meshStandardMaterial color={color} metalness={0.9} roughness={0.15} />
+            <meshStandardMaterial color={color} metalness={0.4} roughness={0.35} />
           </mesh>
           
           {/* Cockpit */}
@@ -366,7 +366,7 @@ export const Car = ({
           {/* Front wing */}
           <mesh position={[0, 0.1, 1.9]} castShadow>
             <boxGeometry args={[1.6, 0.05, 0.4]} />
-            <meshStandardMaterial color={color} metalness={0.8} roughness={0.2} />
+            <meshStandardMaterial color={color} metalness={0.4} roughness={0.35} />
           </mesh>
           
           {/* Front wing end plates */}
@@ -380,7 +380,7 @@ export const Car = ({
           {/* Rear wing */}
           <mesh position={[0, 0.6, -1.5]} castShadow>
             <boxGeometry args={[1.2, 0.05, 0.3]} />
-            <meshStandardMaterial color={color} metalness={0.8} roughness={0.2} />
+            <meshStandardMaterial color={color} metalness={0.4} roughness={0.35} />
           </mesh>
           
           {/* Rear wing supports */}
@@ -395,7 +395,7 @@ export const Car = ({
           {[-0.55, 0.55].map((x, i) => (
             <mesh key={i} position={[x, 0.3, 0]} castShadow>
               <boxGeometry args={[0.35, 0.2, 1.5]} />
-              <meshStandardMaterial color={color} metalness={0.85} roughness={0.2} />
+              <meshStandardMaterial color={color} metalness={0.4} roughness={0.35} />
             </mesh>
           ))}
           
