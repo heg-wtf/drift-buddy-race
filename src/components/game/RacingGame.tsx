@@ -405,6 +405,8 @@ export const RacingGame = () => {
         lap={currentLap}
         totalLaps={totalLaps || 10}
         damage={playerDamage}
+        boostAvailable={!boostUsedThisLap}
+        boostActive={boostActive}
       />
 
       <Minimap 
