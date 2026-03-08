@@ -183,7 +183,6 @@ export const Car = ({
       sparksRef.current.visible = false;
     }
 
-    if (damage >= 100) return;
     if (!raceStarted) return;
 
     if (isPlayer && controls) {
