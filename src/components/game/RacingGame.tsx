@@ -253,7 +253,7 @@ export const RacingGame = () => {
     }
   }, [soundInitialized]);
 
-  const playerDamage = damages.get('player') || 0;
+  const currentLap = Math.min(lap, totalLaps || 10);
   const currentLap = Math.min(lap, totalLaps || 10);
 
   return (
