@@ -198,14 +198,16 @@ export const RacingGame = () => {
     // Detect lap completion: progress wraps from high (>0.9) to low (<0.1)
     if (prevProgressRef.current > 0.85 && trackProgress < 0.15) {
       const now = performance.now();
-      const lapTime = (now - lapStartTimeRef.current) / 1000;
       
-      // Ignore first crossing (car starts behind finish line) — require at least 5 seconds
-      if (lapTime < 5) {
+      // First crossing of the start line after race begins — don't count as a lap
+      if (!firstLapCrossed) {
+        setFirstLapCrossed(true);
         lapStartTimeRef.current = now;
         prevProgressRef.current = trackProgress;
         return;
       }
+      
+      const lapTime = (now - lapStartTimeRef.current) / 1000;
       
       lapStartTimeRef.current = now;
       
