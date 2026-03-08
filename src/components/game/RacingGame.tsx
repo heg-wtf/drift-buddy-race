@@ -227,7 +227,7 @@ export const RacingGame = () => {
       });
     }
     prevProgressRef.current = trackProgress;
-  }, [totalLaps]);
+  }, [totalLaps, firstLapCrossed]);
 
   const handlePositionUpdate = useCallback((id: string, position: THREE.Vector3) => {
     setCarPositions(prev => {
