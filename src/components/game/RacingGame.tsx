@@ -271,19 +271,20 @@ export const RacingGame = () => {
         <Cloud position={[20, 35, -20]} speed={0.2} opacity={0.4} />
         <Cloud position={[0, 32, 20]} speed={0.15} opacity={0.6} />
         
-        <ambientLight intensity={0.6} />
+        <ambientLight intensity={0.4} />
         <directionalLight
-          position={[80, 100, 50]}
-          intensity={1.5}
+          position={[150, 200, 100]}
+          intensity={2}
           castShadow
-          shadow-mapSize={[2048, 2048]}
-          shadow-camera-far={200}
-          shadow-camera-left={-100}
-          shadow-camera-right={100}
-          shadow-camera-top={100}
-          shadow-camera-bottom={-100}
+          shadow-mapSize={[4096, 4096]}
+          shadow-camera-far={500}
+          shadow-camera-left={-250}
+          shadow-camera-right={250}
+          shadow-camera-top={250}
+          shadow-camera-bottom={-250}
+          shadow-bias={-0.0005}
         />
-        <hemisphereLight args={['#87ceeb', '#3d7a37', 0.5]} />
+        <hemisphereLight args={['#87ceeb', '#3d7a37', 0.4]} />
         
         <Track width={TRACK_WIDTH} />
         
