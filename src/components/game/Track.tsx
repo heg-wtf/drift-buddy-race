@@ -130,16 +130,16 @@ export const Track = ({ width = 10 }: TrackProps) => {
 
   return (
     <group>
-      {/* Track surface */}
+      {/* Track surface - black asphalt */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]} receiveShadow>
         <shapeGeometry args={[trackShape]} />
-        <meshStandardMaterial color="#333" roughness={0.8} />
+        <meshStandardMaterial color="#1a1a1a" roughness={0.85} />
       </mesh>
       
-      {/* Track curbs - red and white stripes would go here */}
+      {/* Track overlay for depth */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 0]}>
         <shapeGeometry args={[trackShape]} />
-        <meshStandardMaterial color="#444" roughness={0.9} />
+        <meshStandardMaterial color="#111111" roughness={0.9} />
       </mesh>
       
       {/* Center racing line */}

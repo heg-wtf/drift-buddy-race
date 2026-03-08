@@ -21,6 +21,7 @@ interface CarProps {
   damage?: number;
   onDamage?: (id: string, amount: number) => void;
   trackWidth?: number;
+  raceStarted?: boolean;
 }
 
 export const Car = ({ 
@@ -35,7 +36,8 @@ export const Car = ({
   otherCars,
   damage = 0,
   onDamage,
-  trackWidth = 10
+  trackWidth = 10,
+  raceStarted = false
 }: CarProps) => {
   const carRef = useRef<THREE.Group>(null);
   const velocity = useRef(0);
@@ -168,6 +170,7 @@ export const Car = ({
     }
 
     if (damage >= 100) return;
+    if (!raceStarted) return;
 
     if (isPlayer && controls) {
       const damageMultiplier = Math.max(0.3, 1 - damage / 150);
