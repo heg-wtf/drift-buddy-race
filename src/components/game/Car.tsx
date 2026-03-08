@@ -366,7 +366,7 @@ export const Car = ({
           {/* Front wing */}
           <mesh position={[0, 0.1, 1.9]} castShadow>
             <boxGeometry args={[1.6, 0.05, 0.4]} />
-            <meshStandardMaterial color={color} metalness={0.8} roughness={0.2} />
+            <meshStandardMaterial color={color} metalness={0.4} roughness={0.35} />
           </mesh>
           
           {/* Front wing end plates */}
