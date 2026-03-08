@@ -170,6 +170,7 @@ export const Car = ({
     }
 
     if (damage >= 100) return;
+    if (!raceStarted) return;
 
     if (isPlayer && controls) {
       const damageMultiplier = Math.max(0.3, 1 - damage / 150);
