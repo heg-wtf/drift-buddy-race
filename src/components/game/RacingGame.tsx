@@ -215,6 +215,8 @@ export const RacingGame = () => {
 
   const handleRaceStart = useCallback(() => {
     setRaceStarted(true);
+    lapStartTimeRef.current = performance.now();
+    raceStartTimeRef.current = performance.now();
   }, []);
 
   const handleCountdownBeep = useCallback((final: boolean) => {
