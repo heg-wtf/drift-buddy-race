@@ -342,7 +342,7 @@ export const Car = ({
             rotation={[damageLevel * 0.05, 0, damageLevel * 0.1]}
           >
             <boxGeometry args={[0.9, 0.25, 3.2]} />
-            <meshStandardMaterial color={color} metalness={0.9} roughness={0.15} />
+            <meshStandardMaterial color={color} metalness={0.4} roughness={0.35} />
           </mesh>
           
           {/* Nose cone */}
