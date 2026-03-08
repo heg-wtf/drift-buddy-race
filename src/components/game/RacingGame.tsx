@@ -467,6 +467,14 @@ export const RacingGame = () => {
               </div>
             </div>
             
+            <div className="mb-4">
+              <SubmitScore
+                bestLapTime={Math.min(...lapTimes)}
+                totalLaps={totalLaps || 3}
+                onSubmitted={() => {}}
+              />
+            </div>
+
             <button 
               onClick={handleRestart}
               className="px-8 py-4 bg-primary text-primary-foreground rounded-lg text-xl font-bold hover:opacity-90 transition-opacity pointer-events-auto"
