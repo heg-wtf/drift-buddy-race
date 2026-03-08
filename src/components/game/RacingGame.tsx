@@ -210,7 +210,7 @@ export const RacingGame = () => {
   }, [soundInitialized]);
 
   const playerDamage = damages.get('player') || 0;
-  const currentLap = Math.min(lap, TOTAL_LAPS);
+  const currentLap = Math.min(lap, totalLaps || 10);
 
   return (
     <div className="w-full h-screen bg-background relative">
