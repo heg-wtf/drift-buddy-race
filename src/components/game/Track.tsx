@@ -7,76 +7,78 @@ const MIN_SAFE_DISTANCE = 35; // Must be > track width (20) + margin
 // Istanbul Park Circuit — pre-scaled coordinates (no multiplier needed)
 // All parallel sections verified 40+ units apart
 const createIstanbulParkPoints = () => {
-  // Istanbul Park — matched to reference image proportions (~2:1 wide)
-  // Horizontal span ~500, vertical ~280. All non-adjacent ≥35 apart.
+  // Istanbul Park — remapped to match the provided reference silhouette
+  // Wide layout, long T1→T2 straight, pronounced left T8, broader T9–T12 top section
   const pts: [number, number][] = [
-    // Start/Finish straight heading down (center of circuit)
-    [40, -30],
-    [40, 0],       // START LINE
+    // START/FINISH straight (heading down)
+    [40, -35],
+    [40, 0],
     [40, 40],
 
-    // T1 — gentle right heading toward long bottom straight
-    [60, 70],
-    [90, 90],
+    // T1
+    [52, 64],
+    [78, 78],
 
-    // Long bottom straight going FAR right (key feature)
-    [140, 105],
-    [200, 112],
-    [270, 112],
-    [330, 105],
+    // T1→T2 long bottom straight (very wide)
+    [130, 84],
+    [200, 86],
+    [280, 84],
+    [345, 80],
 
-    // T2 — big hairpin at far right (prominent U-turn)
-    [370, 90],
-    [385, 65],
-    [370, 42],
+    // T2 hairpin at far right
+    [385, 72],
+    [400, 55],
+    [392, 35],
+    [365, 24],
 
-    // Return heading left (runs above outbound, ~60 units separation)
-    [330, 35],
-    [270, 32],
-    [200, 35],
-    [140, 40],
+    // Return left (above outbound straight)
+    [320, 22],
+    [250, 22],
+    [180, 24],
+    [120, 28],
+    [78, 34],
 
-    // T3–T4 heading up-left toward T5
-    [80, 42],
-    [30, 30],
-    [-20, 5],
+    // T3–T4 down-left sweep
+    [35, 55],
+    [-8, 70],
+    [-42, 58],
 
-    // T5 — sharp left going up
-    [-55, -25],
-    [-75, -55],
+    // T5–T7 left complex
+    [-20, 32],
+    [-36, 12],
+    [-72, 10],
+    [-94, -4],
 
-    // T6–T7 up the left side
-    [-90, -85],
-    [-100, -115],
+    // T8 multi-apex (extends left)
+    [-102, -34],
+    [-114, -62],
+    [-126, -88],
+    [-124, -112],
 
-    // T8 — famous multi-apex left sweeper (extends far left)
-    [-118, -145],
-    [-135, -175],
-    [-128, -205],
-    [-105, -220],
+    // T9
+    [-100, -124],
+    [-64, -124],
 
-    // T9 — hairpin at top-left
-    [-75, -230],
-    [-45, -222],
+    // T10–T11 upper section
+    [-20, -124],
+    [12, -116],
+    [42, -102],
 
-    // T10 heading right across top (wide span)
-    [-15, -205],
-    [15, -192],
+    // T12
+    [72, -92],
+    [100, -96],
+    [128, -112],
+    [154, -118],
+    [182, -110],
 
-    // T11 — kink / chicane
-    [40, -188],
-    [60, -185],
-
-    // T12 — sharp right turn heading down
-    [80, -182],
-    [88, -168],
-    [78, -148],
-
-    // T13 — heading down back to start
-    [65, -120],
-    [55, -85],
-    [48, -55],
-    [42, -35],
+    // T13 into start straight
+    [202, -88],
+    [194, -62],
+    [168, -50],
+    [126, -46],
+    [82, -44],
+    [52, -42],
+    [42, -38],
   ];
 
   return pts.map(([x, z]) => new THREE.Vector3(x, 0, z));
