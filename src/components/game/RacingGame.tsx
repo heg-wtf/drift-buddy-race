@@ -425,7 +425,7 @@ export const RacingGame = () => {
       {showLastLap && lastLapTime !== null && !raceFinished && (
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 z-40 animate-pulse">
           <div className="bg-card/90 backdrop-blur-sm rounded-xl px-6 py-3 border border-border">
-            <p className="text-sm text-muted-foreground">랩 {lap - 1} 완료</p>
+            <p className="text-sm text-muted-foreground">Lap {lap - 1} Complete</p>
             <p className="text-3xl font-bold text-primary font-mono">{formatTime(lastLapTime)}</p>
           </div>
         </div>
