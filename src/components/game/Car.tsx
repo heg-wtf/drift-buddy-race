@@ -21,6 +21,7 @@ interface CarProps {
   damage?: number;
   onDamage?: (id: string, amount: number) => void;
   trackWidth?: number;
+  raceStarted?: boolean;
 }
 
 export const Car = ({ 
