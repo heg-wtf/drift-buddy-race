@@ -7,73 +7,75 @@ const MIN_SAFE_DISTANCE = 35; // Must be > track width (20) + margin
 // Istanbul Park Circuit — pre-scaled coordinates (no multiplier needed)
 // All parallel sections verified 40+ units apart
 const createIstanbulParkPoints = () => {
-  // Istanbul Park — carefully mapped from reference image
-  // START at x=40, heading down (+z). Scale ~300x250 units.
-  // All non-adjacent segments verified ≥35 units apart.
+  // Istanbul Park — matched to reference image proportions (~2:1 wide)
+  // Horizontal span ~500, vertical ~280. All non-adjacent ≥35 apart.
   const pts: [number, number][] = [
-    // Start/Finish straight heading down
+    // Start/Finish straight heading down (center of circuit)
     [40, -30],
     [40, 0],       // START LINE
     [40, 40],
 
-    // T1 — gentle right
-    [55, 75],
-    [80, 95],
+    // T1 — gentle right heading toward long bottom straight
+    [60, 70],
+    [90, 90],
 
-    // Long bottom straight going far right
-    [120, 108],
-    [170, 112],
-    [220, 105],
+    // Long bottom straight going FAR right (key feature)
+    [140, 105],
+    [200, 112],
+    [270, 112],
+    [330, 105],
 
-    // T2 — big hairpin at far right
-    [255, 90],
-    [265, 65],
-    [255, 45],
+    // T2 — big hairpin at far right (prominent U-turn)
+    [370, 90],
+    [385, 65],
+    [370, 42],
 
-    // Return heading left (runs above outbound straight)
-    [220, 38],
-    [170, 35],
-    [120, 38],
+    // Return heading left (runs above outbound, ~60 units separation)
+    [330, 35],
+    [270, 32],
+    [200, 35],
+    [140, 40],
 
-    // T3–T4 heading up-left
-    [70, 40],
-    [25, 28],
-    [-15, 5],
+    // T3–T4 heading up-left toward T5
+    [80, 42],
+    [30, 30],
+    [-20, 5],
 
     // T5 — sharp left going up
-    [-45, -25],
-    [-58, -50],
+    [-55, -25],
+    [-75, -55],
 
     // T6–T7 up the left side
-    [-68, -80],
-    [-76, -110],
+    [-90, -85],
+    [-100, -115],
 
-    // T8 — famous multi-apex left sweeper
-    [-88, -135],
-    [-100, -160],
-    [-95, -185],
-    [-75, -200],
+    // T8 — famous multi-apex left sweeper (extends far left)
+    [-118, -145],
+    [-135, -175],
+    [-128, -205],
+    [-105, -220],
 
     // T9 — hairpin at top-left
-    [-50, -210],
-    [-25, -200],
+    [-75, -230],
+    [-45, -222],
 
-    // T10 heading right across top
-    [0, -182],
-    [20, -170],
+    // T10 heading right across top (wide span)
+    [-15, -205],
+    [15, -192],
 
-    // T11 — kink
-    [40, -165],
+    // T11 — kink / chicane
+    [40, -188],
+    [60, -185],
 
-    // T12 — right turn heading down
-    [60, -160],
-    [65, -145],
-    [58, -125],
+    // T12 — sharp right turn heading down
+    [80, -182],
+    [88, -168],
+    [78, -148],
 
     // T13 — heading down back to start
-    [52, -100],
-    [48, -70],
-    [44, -45],
+    [65, -120],
+    [55, -85],
+    [48, -55],
     [42, -35],
   ];
 
@@ -307,7 +309,7 @@ export const Track = ({ width = 10 }: TrackProps) => {
     <group>
       {/* Grass ground */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.05, 0]} receiveShadow>
-        <planeGeometry args={[600, 600]} />
+        <planeGeometry args={[800, 800]} />
         <meshStandardMaterial color="#2d5a27" />
       </mesh>
 
