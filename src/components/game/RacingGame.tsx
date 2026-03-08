@@ -435,8 +435,8 @@ export const RacingGame = () => {
       {raceFinished && (
         <div className="absolute inset-0 bg-background/90 backdrop-blur-md flex items-center justify-center z-50">
           <div className="text-center max-w-md w-full">
-            <h2 className="text-5xl font-bold text-primary mb-2">🏁 레이스 완료!</h2>
-            <p className="text-lg text-muted-foreground mb-6">{totalLaps}랩 완주</p>
+            <h2 className="text-5xl font-bold text-primary mb-2">🏁 Race Complete!</h2>
+            <p className="text-lg text-muted-foreground mb-6">{totalLaps} Laps Finished</p>
             
             {/* Lap times table */}
             <div className="bg-card/80 rounded-xl border border-border p-4 mb-6 text-left">
