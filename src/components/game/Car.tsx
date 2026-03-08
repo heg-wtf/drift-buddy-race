@@ -193,11 +193,10 @@ export const Car = ({
     if (!raceStarted) return;
 
     if (isPlayer && controls) {
-      const damageMultiplier = Math.max(0.3, 1 - damage / 150);
-      const acceleration = 1.2 * damageMultiplier;
+      const acceleration = 1.2;
       const friction = 0.98;
-      const turnSpeed = 2.8 * damageMultiplier;
-      const maxSpeed = 1.8 * damageMultiplier;
+      const turnSpeed = 2.8;
+      const maxSpeed = 1.8;
 
       if (controls.forward) {
         velocity.current = Math.min(velocity.current + acceleration * delta, maxSpeed);
