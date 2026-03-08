@@ -198,7 +198,7 @@ export const Car = ({
 
     if (isPlayer && controls) {
       const acceleration = 1.2;
-      const friction = 0.98;
+      const friction = 0.99;
       const turnSpeed = 2.8;
       const maxSpeed = 1.8;
 
