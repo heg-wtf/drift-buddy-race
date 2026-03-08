@@ -8,6 +8,7 @@ import { GameHUD } from './GameHUD';
 import { Minimap } from './Minimap';
 import { StartCountdown } from './StartCountdown';
 import { soundEngine } from './SoundEngine';
+import { Leaderboard, SubmitScore } from './Leaderboard';
 
 const AI_COLORS: string[] = []; // No AI cars
 const TRACK_WIDTH = 20;
