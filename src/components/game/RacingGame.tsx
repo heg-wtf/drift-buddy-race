@@ -230,7 +230,7 @@ export const RacingGame = () => {
     window.location.reload();
   }, []);
 
-
+  const handleCountdownBeep = useCallback((final: boolean) => {
     if (soundInitialized) {
       soundEngine.playCountdownBeep(final);
     }
