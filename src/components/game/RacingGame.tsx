@@ -8,6 +8,7 @@ import { GameHUD } from './GameHUD';
 import { Minimap } from './Minimap';
 import { StartCountdown } from './StartCountdown';
 import { soundEngine } from './SoundEngine';
+import { Leaderboard, SubmitScore } from './Leaderboard';
 
 const AI_COLORS: string[] = []; // No AI cars
 const TRACK_WIDTH = 20;
@@ -382,6 +383,8 @@ export const RacingGame = () => {
             >
               🏁 Race Start
             </button>
+
+            <Leaderboard />
           </div>
         </div>
       )}
@@ -464,6 +467,14 @@ export const RacingGame = () => {
               </div>
             </div>
             
+            <div className="mb-4">
+              <SubmitScore
+                bestLapTime={Math.min(...lapTimes)}
+                totalLaps={totalLaps || 3}
+                onSubmitted={() => {}}
+              />
+            </div>
+
             <button 
               onClick={handleRestart}
               className="px-8 py-4 bg-primary text-primary-foreground rounded-lg text-xl font-bold hover:opacity-90 transition-opacity pointer-events-auto"
