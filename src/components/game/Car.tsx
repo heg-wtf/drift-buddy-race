@@ -56,9 +56,10 @@ export const Car = ({
 
   useEffect(() => {
     if (carRef.current) {
-      // Start at beginning of track
-      const startPoint = trackPath.current.getPointAt(0);
-      const nextPoint = trackPath.current.getPointAt(0.01);
+      // Start slightly ahead of seam point for clean tangent
+      const startT = 0.005;
+      const startPoint = trackPath.current.getPointAt(startT);
+      const nextPoint = trackPath.current.getPointAt(startT + 0.01);
       const startDir = new THREE.Vector3().subVectors(nextPoint, startPoint).normalize();
       rotation.current = Math.atan2(startDir.x, startDir.z);
       
