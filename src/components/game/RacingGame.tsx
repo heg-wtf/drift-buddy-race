@@ -170,6 +170,15 @@ export const RacingGame = () => {
     
     // Detect lap completion: progress wraps from high (>0.9) to low (<0.1)
     if (prevProgressRef.current > 0.85 && trackProgress < 0.15) {
+      const now = performance.now();
+      const lapTime = (now - lapStartTimeRef.current) / 1000;
+      lapStartTimeRef.current = now;
+      
+      setLapTimes(prev => [...prev, lapTime]);
+      setLastLapTime(lapTime);
+      setShowLastLap(true);
+      setTimeout(() => setShowLastLap(false), 3000);
+      
       setLap(prev => {
         const newLap = prev + 1;
         if (newLap > (totalLaps || 10)) {
@@ -179,7 +188,7 @@ export const RacingGame = () => {
       });
     }
     prevProgressRef.current = trackProgress;
-  }, []);
+  }, [totalLaps]);
 
   const handlePositionUpdate = useCallback((id: string, position: THREE.Vector3) => {
     setCarPositions(prev => {
