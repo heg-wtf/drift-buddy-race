@@ -13,10 +13,10 @@ const AI_COLORS: string[] = []; // No AI cars
 const TRACK_WIDTH = 20;
 const LAP_OPTIONS = [3, 5, 7, 10];
 const CAR_COLORS = [
-  { label: '빨간색', value: '#e63946' },
-  { label: '주황색', value: '#ff8c00' },
-  { label: '파란색', value: '#2563eb' },
-  { label: '흰색', value: '#f0f0f0' },
+  { label: '빨간색', value: '#ff2d2d', preview: '#e63946' },
+  { label: '주황색', value: '#ffa500', preview: '#ff8c00' },
+  { label: '파란색', value: '#4d8fff', preview: '#2563eb' },
+  { label: '흰색', value: '#ffffff', preview: '#f0f0f0' },
 ];
 
 const formatTime = (seconds: number) => {

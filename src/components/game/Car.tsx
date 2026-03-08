@@ -395,7 +395,7 @@ export const Car = ({
           {[-0.55, 0.55].map((x, i) => (
             <mesh key={i} position={[x, 0.3, 0]} castShadow>
               <boxGeometry args={[0.35, 0.2, 1.5]} />
-              <meshStandardMaterial color={color} metalness={0.85} roughness={0.2} />
+              <meshStandardMaterial color={color} metalness={0.4} roughness={0.35} />
             </mesh>
           ))}
           
