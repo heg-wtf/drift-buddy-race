@@ -56,8 +56,8 @@ class SoundEngine {
   }
 
   stopEngine() {
-    if (this.engineOsc) {
-      this.engineOsc.stop();
+    if (this.engineOsc && this.isPlaying) {
+      try { this.engineOsc.stop(); } catch (_) {}
       this.engineOsc = null;
       this.engineGain = null;
       this.isPlaying = false;
