@@ -314,12 +314,21 @@ export const Car = ({
 
   const isDestroyed = damage >= 100;
   const damageLevel = Math.min(damage / 100, 1);
+  const isBoosting = isPlayer && controls?.boost;
 
   const sparkPositions = new Float32Array(30 * 3);
   for (let i = 0; i < 30; i++) {
     sparkPositions[i * 3] = (Math.random() - 0.5) * 3;
     sparkPositions[i * 3 + 1] = Math.random() * 2;
     sparkPositions[i * 3 + 2] = (Math.random() - 0.5) * 3;
+  }
+
+  // Boost trail particles
+  const boostTrailPositions = new Float32Array(50 * 3);
+  for (let i = 0; i < 50; i++) {
+    boostTrailPositions[i * 3] = (Math.random() - 0.5) * 0.8;
+    boostTrailPositions[i * 3 + 1] = Math.random() * 0.5;
+    boostTrailPositions[i * 3 + 2] = -1.8 - Math.random() * 4;
   }
 
   return (
