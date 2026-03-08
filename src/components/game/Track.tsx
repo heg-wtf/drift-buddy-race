@@ -342,12 +342,6 @@ export const Track = ({ width = 10 }: TrackProps) => {
         <meshStandardMaterial color="#f8fafc" side={THREE.DoubleSide} />
       </mesh>
 
-      {/* Grandstand with spectators */}
-      <Grandstand />
-
-      {/* Cameramen at corners */}
-      <Cameramen />
-
       {/* Buildings around the track */}
       <TrackBuildings />
     </group>
