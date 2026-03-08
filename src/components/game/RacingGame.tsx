@@ -478,6 +478,3 @@ export const RacingGame = () => {
     </div>
   );
 };
-    </div>
-  );
-};
