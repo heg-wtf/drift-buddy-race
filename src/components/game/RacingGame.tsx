@@ -13,6 +13,13 @@ const AI_COLORS: string[] = []; // No AI cars
 const TRACK_WIDTH = 20;
 const LAP_OPTIONS = [3, 5, 7, 10];
 
+const formatTime = (seconds: number) => {
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  const ms = Math.floor((seconds % 1) * 1000);
+  return `${mins}:${secs.toString().padStart(2, '0')}.${ms.toString().padStart(3, '0')}`;
+};
+
 const FollowCamera = ({ playerPos, playerRot }: { playerPos: THREE.Vector3 | null; playerRot: number }) => {
   const { camera } = useThree();
   const smoothPos = useRef(new THREE.Vector3(0, 15, -20));
