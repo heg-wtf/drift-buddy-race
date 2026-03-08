@@ -66,6 +66,8 @@ export const Car = ({
         // Player starts at front
         carRef.current.position.set(startPoint.x, 0, startPoint.z);
         aiProgress.current = 0;
+        // Report initial position so camera can frame the car during countdown
+        onUpdate?.(carRef.current.position.clone(), rotation.current, 0, 0);
       } else {
         // AI starts behind player in a grid formation
         const behindOffset = 0.98 - (aiIndex + 1) * 0.012; // Behind start line
