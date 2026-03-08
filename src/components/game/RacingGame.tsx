@@ -253,7 +253,6 @@ export const RacingGame = () => {
   }, [soundInitialized]);
 
   const currentLap = Math.min(lap, totalLaps || 10);
-  const currentLap = Math.min(lap, totalLaps || 10);
 
   return (
     <div className="w-full h-screen bg-background relative">
