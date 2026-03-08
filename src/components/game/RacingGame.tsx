@@ -323,7 +323,7 @@ export const RacingGame = () => {
             
             {/* Car color selection */}
             <div className="flex flex-col items-center gap-3 w-full">
-              <p className="text-base text-muted-foreground tracking-wide">차량 색상</p>
+              <p className="text-base text-muted-foreground tracking-wide">Car Color</p>
               <div className="flex gap-5 justify-center">
                 {CAR_COLORS.map((c) => (
                   <button
