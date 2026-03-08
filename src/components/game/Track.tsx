@@ -173,9 +173,13 @@ const computeOffsetPoints = (centerPoints: THREE.Vector3[], offset: number) => {
   return result;
 };
 
+let _trackValidated = false;
 export const getTrackPath = () => {
   const curve = new THREE.CatmullRomCurve3(createIstanbulParkPoints(), true, 'catmullrom', 0.3);
-  validateTrack(curve, TRACK_POINT_COUNT);
+  if (!_trackValidated) {
+    _trackValidated = true;
+    setTimeout(() => validateTrack(curve, TRACK_POINT_COUNT), 100);
+  }
   return curve;
 };
 
