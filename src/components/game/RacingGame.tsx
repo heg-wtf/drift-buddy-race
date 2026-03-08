@@ -13,6 +13,13 @@ const AI_COLORS: string[] = []; // No AI cars
 const TRACK_WIDTH = 20;
 const LAP_OPTIONS = [3, 5, 7, 10];
 
+const formatTime = (seconds: number) => {
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  const ms = Math.floor((seconds % 1) * 1000);
+  return `${mins}:${secs.toString().padStart(2, '0')}.${ms.toString().padStart(3, '0')}`;
+};
+
 const FollowCamera = ({ playerPos, playerRot }: { playerPos: THREE.Vector3 | null; playerRot: number }) => {
   const { camera } = useThree();
   const smoothPos = useRef(new THREE.Vector3(0, 15, -20));
@@ -56,8 +63,13 @@ export const RacingGame = () => {
   const [playerProgress, setPlayerProgress] = useState(0);
   const [lap, setLap] = useState(1);
   const [raceFinished, setRaceFinished] = useState(false);
-  const [totalLaps, setTotalLaps] = useState<number | null>(null); // null = not selected yet
+  const [totalLaps, setTotalLaps] = useState<number | null>(null);
   const [countdownReady, setCountdownReady] = useState(false);
+  const [lapTimes, setLapTimes] = useState<number[]>([]);
+  const [lastLapTime, setLastLapTime] = useState<number | null>(null);
+  const [showLastLap, setShowLastLap] = useState(false);
+  const lapStartTimeRef = useRef(0);
+  const raceStartTimeRef = useRef(0);
   const prevProgressRef = useRef(0);
   const prevDamageRef = useRef<Map<string, number>>(new Map());
 
@@ -165,6 +177,15 @@ export const RacingGame = () => {
     
     // Detect lap completion: progress wraps from high (>0.9) to low (<0.1)
     if (prevProgressRef.current > 0.85 && trackProgress < 0.15) {
+      const now = performance.now();
+      const lapTime = (now - lapStartTimeRef.current) / 1000;
+      lapStartTimeRef.current = now;
+      
+      setLapTimes(prev => [...prev, lapTime]);
+      setLastLapTime(lapTime);
+      setShowLastLap(true);
+      setTimeout(() => setShowLastLap(false), 3000);
+      
       setLap(prev => {
         const newLap = prev + 1;
         if (newLap > (totalLaps || 10)) {
@@ -174,7 +195,7 @@ export const RacingGame = () => {
       });
     }
     prevProgressRef.current = trackProgress;
-  }, []);
+  }, [totalLaps]);
 
   const handlePositionUpdate = useCallback((id: string, position: THREE.Vector3) => {
     setCarPositions(prev => {
@@ -201,6 +222,12 @@ export const RacingGame = () => {
 
   const handleRaceStart = useCallback(() => {
     setRaceStarted(true);
+    lapStartTimeRef.current = performance.now();
+    raceStartTimeRef.current = performance.now();
+  }, []);
+
+  const handleRestart = useCallback(() => {
+    window.location.reload();
   }, []);
 
   const handleCountdownBeep = useCallback((final: boolean) => {
@@ -318,17 +345,54 @@ export const RacingGame = () => {
         trackWidth={TRACK_WIDTH}
       />
 
+      {/* Lap time flash */}
+      {showLastLap && lastLapTime !== null && !raceFinished && (
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 z-40 animate-pulse">
+          <div className="bg-card/90 backdrop-blur-sm rounded-xl px-6 py-3 border border-border">
+            <p className="text-sm text-muted-foreground">랩 {lap - 1} 완료</p>
+            <p className="text-3xl font-bold text-primary font-mono">{formatTime(lastLapTime)}</p>
+          </div>
+        </div>
+      )}
+
       {/* Race Finished overlay */}
       {raceFinished && (
-        <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="text-center">
-            <h2 className="text-5xl font-bold text-primary mb-4">🏁 레이스 완료!</h2>
-            <p className="text-xl text-muted-foreground mb-8">{totalLaps}랩을 완주했습니다!</p>
+        <div className="absolute inset-0 bg-background/90 backdrop-blur-md flex items-center justify-center z-50">
+          <div className="text-center max-w-md w-full">
+            <h2 className="text-5xl font-bold text-primary mb-2">🏁 레이스 완료!</h2>
+            <p className="text-lg text-muted-foreground mb-6">{totalLaps}랩 완주</p>
+            
+            {/* Lap times table */}
+            <div className="bg-card/80 rounded-xl border border-border p-4 mb-6 text-left">
+              <div className="grid grid-cols-2 gap-1 mb-3">
+                {lapTimes.map((time, i) => (
+                  <div key={i} className="flex justify-between px-3 py-1.5 rounded-md odd:bg-muted/30">
+                    <span className="text-sm text-muted-foreground">랩 {i + 1}</span>
+                    <span className={`text-sm font-mono font-bold ${time === Math.min(...lapTimes) ? 'text-primary' : 'text-foreground'}`}>
+                      {formatTime(time)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <div className="border-t border-border pt-3 flex justify-between px-3">
+                <span className="text-sm font-bold text-muted-foreground">총 시간</span>
+                <span className="text-sm font-mono font-bold text-primary">
+                  {formatTime(lapTimes.reduce((a, b) => a + b, 0))}
+                </span>
+              </div>
+              <div className="flex justify-between px-3 mt-1">
+                <span className="text-sm font-bold text-muted-foreground">베스트 랩</span>
+                <span className="text-sm font-mono font-bold text-primary">
+                  {formatTime(Math.min(...lapTimes))}
+                </span>
+              </div>
+            </div>
+            
             <button 
-              onClick={() => window.location.reload()}
+              onClick={handleRestart}
               className="px-8 py-4 bg-primary text-primary-foreground rounded-lg text-xl font-bold hover:opacity-90 transition-opacity pointer-events-auto"
             >
-              다시 시작 (R)
+              다시 시작
             </button>
           </div>
         </div>
@@ -336,15 +400,27 @@ export const RacingGame = () => {
 
       {/* Game Over overlay */}
       {gameOver && !raceFinished && (
-        <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="text-center">
+        <div className="absolute inset-0 bg-background/90 backdrop-blur-md flex items-center justify-center z-50">
+          <div className="text-center max-w-md w-full">
             <h2 className="text-5xl font-bold text-destructive mb-4">차량 파괴!</h2>
-            <p className="text-xl text-muted-foreground mb-8">충돌로 인해 차량이 파괴되었습니다</p>
+            <p className="text-xl text-muted-foreground mb-4">충돌로 인해 차량이 파괴되었습니다</p>
+            
+            {lapTimes.length > 0 && (
+              <div className="bg-card/80 rounded-xl border border-border p-4 mb-6 text-left">
+                {lapTimes.map((time, i) => (
+                  <div key={i} className="flex justify-between px-3 py-1.5">
+                    <span className="text-sm text-muted-foreground">랩 {i + 1}</span>
+                    <span className="text-sm font-mono font-bold text-foreground">{formatTime(time)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            
             <button 
-              onClick={() => window.location.reload()}
+              onClick={handleRestart}
               className="px-8 py-4 bg-primary text-primary-foreground rounded-lg text-xl font-bold hover:opacity-90 transition-opacity pointer-events-auto"
             >
-              다시 시작 (R)
+              다시 시작
             </button>
           </div>
         </div>
