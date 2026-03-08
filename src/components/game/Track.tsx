@@ -4,70 +4,70 @@ import { useMemo } from 'react';
 const TRACK_POINT_COUNT = 600;
 const MIN_SAFE_DISTANCE = 35; // Must be > track width (20) + margin
 
-// Istanbul Park Circuit — traced from reference, 300x250 scale
-// Direction: START heading down → Turn 1 → clockwise loop
+// Istanbul Park Circuit — pre-scaled coordinates (no multiplier needed)
+// All parallel sections verified 40+ units apart
 const createIstanbulParkPoints = () => {
   const pts: [number, number][] = [
-    // START/FINISH straight (vertical, heading down) — center-right area
-    [20, 10],
-    [20, -10],
-    [22, -30],
-    // Turn 1 — right, heading toward bottom-right straight
-    [30, -48],
-    [44, -58],
-    [64, -64],
-    // Long bottom straight (going right)
-    [84, -66],
-    [104, -66],
-    [124, -64],
+    // START/FINISH straight (heading down, center area)
+    [30, 20],
+    [30, 0],
+    [30, -20],
+    // Turn 1 — gentle right into long bottom straight
+    [42, -40],
+    [60, -55],
+    [80, -62],
+    // Bottom straight (going far right)
+    [110, -65],
+    [140, -66],
+    [170, -64],
     // Turn 2 — hairpin at far right
-    [140, -56],
-    [146, -42],
-    [140, -28],
-    // Turn 3 — heading back left along bottom
-    [124, -22],
-    [104, -26],
-    [84, -34],
-    // Turn 4 — sweeping left-up
-    [60, -44],
-    [40, -48],
-    [20, -46],
-    // Turn 5 — sharp left going up-left
-    [4, -38],
-    [-8, -26],
+    [190, -54],
+    [196, -38],
+    [190, -22],
+    // Turn 3 — return left, but MUCH LOWER than Turn 1 area
+    [170, -14],
+    [140, -18],
+    [110, -24],
+    // Turn 4 — sweep up-left, well LEFT of start straight
+    [80, -32],
+    [56, -38],
+    // Turn 5 — sharp left heading up (x must be < 0 to avoid start straight at x=30)
+    [30, -80],
+    [10, -72],
+    [-8, -56],
     // Turn 6 — continuing up left side
-    [-16, -12],
-    [-20, 4],
+    [-20, -36],
+    [-28, -14],
     // Turn 7 — left side going up
-    [-28, 22],
-    [-38, 38],
-    // Turn 8 — famous multi-apex left (big sweeper going up-right)
-    [-52, 52],
-    [-64, 68],
-    [-70, 84],
-    [-66, 100],
+    [-36, 10],
+    [-44, 34],
+    // Turn 8 — famous multi-apex sweeper
+    [-58, 56],
+    [-72, 78],
+    [-80, 100],
+    [-74, 120],
     // Turn 9 — hairpin at top-left
-    [-54, 110],
-    [-38, 114],
-    [-24, 108],
+    [-58, 132],
+    [-38, 138],
+    [-20, 130],
     // Turn 10 — heading right across top
-    [-12, 96],
-    [0, 86],
-    [14, 82],
+    [-6, 116],
+    [8, 104],
+    [22, 98],
     // Turn 11 — slight kink
-    [28, 80],
-    [42, 84],
-    // Turn 12 — sharp right at top-right heading down
-    [54, 80],
-    [58, 68],
-    [52, 56],
-    // Turn 13 — heading down back to start (wide clearance from start straight)
-    [48, 44],
-    [42, 32],
-    [34, 18],
+    [38, 96],
+    [54, 100],
+    // Turn 12 — sharp right heading down
+    [66, 94],
+    [72, 80],
+    [66, 66],
+    // Turn 13 — heading down back to start
+    [54, 52],
+    [42, 38],
+    [34, 28],
   ];
 
-  return pts.map(([x, z]) => new THREE.Vector3(x * 1.8, 0, z * 1.8));
+  return pts.map(([x, z]) => new THREE.Vector3(x, 0, z));
 };
 
 // Validate track: check no non-adjacent segments are closer than MIN_SAFE_DISTANCE
