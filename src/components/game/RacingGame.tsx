@@ -364,7 +364,7 @@ export const RacingGame = () => {
             
             {/* Lap times table */}
             <div className="bg-card/80 rounded-xl border border-border p-4 mb-6 text-left">
-              <div className="grid grid-cols-2 gap-1 mb-3">
+              <div className="flex flex-col gap-1 mb-3">
                 {lapTimes.map((time, i) => (
                   <div key={i} className="flex justify-between px-3 py-1.5 rounded-md odd:bg-muted/30">
                     <span className="text-sm text-muted-foreground">랩 {i + 1}</span>
