@@ -446,6 +446,47 @@ export const Car = ({
           {damageLevel > 0.7 && (
             <pointLight position={[0, 0.5, -1]} intensity={4} distance={5} color="#ff4400" />
           )}
+
+          {/* Boost flames */}
+          {isBoosting && (
+            <group ref={boostFlameRef}>
+              {/* Left exhaust flame */}
+              <mesh position={[-0.25, 0.2, -1.8]}>
+                <coneGeometry args={[0.15, 1.2, 8]} />
+                <meshBasicMaterial color="#ff6600" transparent opacity={0.9} />
+              </mesh>
+              <mesh position={[-0.25, 0.2, -2.2]}>
+                <coneGeometry args={[0.08, 0.8, 8]} />
+                <meshBasicMaterial color="#ffcc00" transparent opacity={0.85} />
+              </mesh>
+              
+              {/* Right exhaust flame */}
+              <mesh position={[0.25, 0.2, -1.8]}>
+                <coneGeometry args={[0.15, 1.2, 8]} />
+                <meshBasicMaterial color="#ff6600" transparent opacity={0.9} />
+              </mesh>
+              <mesh position={[0.25, 0.2, -2.2]}>
+                <coneGeometry args={[0.08, 0.8, 8]} />
+                <meshBasicMaterial color="#ffcc00" transparent opacity={0.85} />
+              </mesh>
+
+              {/* Boost glow light */}
+              <pointLight position={[0, 0.3, -2.5]} intensity={8} distance={10} color="#ff8800" />
+
+              {/* Speed trail particles */}
+              <points ref={boostTrailRef}>
+                <bufferGeometry>
+                  <bufferAttribute
+                    attach="attributes-position"
+                    count={50}
+                    array={boostTrailPositions}
+                    itemSize={3}
+                  />
+                </bufferGeometry>
+                <pointsMaterial color="#ffaa33" size={0.12} transparent opacity={0.7} />
+              </points>
+            </group>
+          )}
         </>
       ) : (
         /* Destroyed car wreckage */
