@@ -412,19 +412,6 @@ export const Car = ({
             </group>
           ))}
 
-          {/* Damage smoke */}
-          {damageLevel > 0.3 && (
-            <mesh position={[0, 0.8, -0.5]}>
-              <sphereGeometry args={[0.25 + damageLevel * 0.25, 8, 8]} />
-              <meshStandardMaterial color="#444" transparent opacity={0.5 * damageLevel} />
-            </mesh>
-          )}
-
-          {/* Fire when heavily damaged */}
-          {damageLevel > 0.7 && (
-            <pointLight position={[0, 0.5, -1]} intensity={4} distance={5} color="#ff4400" />
-          )}
-
           {/* Boost flames */}
           {isBoosting && (
             <group ref={boostFlameRef}>
@@ -466,26 +453,6 @@ export const Car = ({
             </group>
           )}
         </>
-      ) : (
-        /* Destroyed car wreckage */
-        <>
-          <mesh position={[0, 0.15, 0]} rotation={[0.2, 0.3, 0.4]}>
-            <boxGeometry args={[1, 0.2, 2.5]} />
-            <meshStandardMaterial color="#111" metalness={0.3} roughness={0.9} />
-          </mesh>
-          {[...Array(6)].map((_, i) => (
-            <mesh 
-              key={i} 
-              position={[(Math.random() - 0.5) * 4, 0.1, (Math.random() - 0.5) * 4]}
-              rotation={[Math.random() * 2, Math.random() * 2, Math.random() * 2]}
-            >
-              <boxGeometry args={[0.3 + Math.random() * 0.2, 0.15, 0.4 + Math.random() * 0.2]} />
-              <meshStandardMaterial color={color} metalness={0.5} roughness={0.7} />
-            </mesh>
-          ))}
-          <pointLight position={[0, 0.5, 0]} intensity={6} distance={8} color="#ff2200" />
-        </>
-      )}
     </group>
   );
 };
