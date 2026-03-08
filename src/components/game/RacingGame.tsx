@@ -457,7 +457,7 @@ export const RacingGame = () => {
                 </span>
               </div>
               <div className="flex justify-between px-3 mt-1">
-                <span className="text-sm font-bold text-muted-foreground">베스트 랩</span>
+                <span className="text-sm font-bold text-muted-foreground">Best Lap</span>
                 <span className="text-sm font-mono font-bold text-primary">
                   {formatTime(Math.min(...lapTimes))}
                 </span>
