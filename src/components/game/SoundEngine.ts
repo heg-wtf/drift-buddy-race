@@ -3,7 +3,23 @@ class SoundEngine {
   private ctx: AudioContext | null = null;
   private engineOsc: OscillatorNode | null = null;
   private engineGain: GainNode | null = null;
+  private masterGain: GainNode | null = null;
   private isPlaying = false;
+
+  private getMasterGain(): GainNode {
+    const ctx = this.getCtx();
+    if (!this.masterGain) {
+      this.masterGain = ctx.createGain();
+      this.masterGain.gain.value = 0; // default OFF
+      this.masterGain.connect(ctx.destination);
+    }
+    return this.masterGain;
+  }
+
+  setMasterVolume(vol: number) {
+    const gain = this.getMasterGain();
+    gain.gain.setValueAtTime(vol, this.getCtx().currentTime);
+  }
 
   private getCtx(): AudioContext {
     if (!this.ctx) {
