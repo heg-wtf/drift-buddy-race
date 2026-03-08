@@ -56,8 +56,8 @@ class SoundEngine {
   }
 
   stopEngine() {
-    if (this.engineOsc) {
-      this.engineOsc.stop();
+    if (this.engineOsc && this.isPlaying) {
+      try { this.engineOsc.stop(); } catch (_) {}
       this.engineOsc = null;
       this.engineGain = null;
       this.isPlaying = false;
@@ -137,8 +137,9 @@ class SoundEngine {
   dispose() {
     this.stopEngine();
     if (this.ctx) {
-      this.ctx.close();
+      try { this.ctx.close(); } catch (_) {}
       this.ctx = null;
+      this.masterGain = null;
     }
   }
 }
