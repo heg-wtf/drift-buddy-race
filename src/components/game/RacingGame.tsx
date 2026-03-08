@@ -309,9 +309,7 @@ export const RacingGame = () => {
             color={color}
             aiIndex={index}
             onPositionUpdate={handlePositionUpdate}
-            otherCars={carPositions}
-            damage={damages.get(`ai-${index}`) || 0}
-            onDamage={handleDamage}
+          otherCars={carPositions}
             trackWidth={TRACK_WIDTH}
             raceStarted={raceStarted && !raceFinished}
             playerProgress={playerProgress}
