@@ -46,7 +46,7 @@ export const Car = ({
   const rotation = useRef(0);
   // AI starts behind player: negative progress (will start at positions behind start line)
   const aiProgress = useRef(-0.02 - (aiIndex + 1) * 0.015);
-  const aiSpeed = useRef(0.0015 + Math.random() * 0.0008);
+  const aiSpeed = useRef(0.003 + Math.random() * 0.0015);
   const knockbackVelocity = useRef(new THREE.Vector3(0, 0, 0));
   const sparksRef = useRef<THREE.Points>(null);
   const sparkTime = useRef(0);
@@ -194,10 +194,10 @@ export const Car = ({
 
     if (isPlayer && controls) {
       const damageMultiplier = Math.max(0.3, 1 - damage / 150);
-      const acceleration = 0.6 * damageMultiplier;
+      const acceleration = 1.2 * damageMultiplier;
       const friction = 0.98;
       const turnSpeed = 2.8 * damageMultiplier;
-      const maxSpeed = 0.9 * damageMultiplier;
+      const maxSpeed = 1.8 * damageMultiplier;
 
       if (controls.forward) {
         velocity.current = Math.min(velocity.current + acceleration * delta, maxSpeed);
@@ -232,7 +232,7 @@ export const Car = ({
       }
 
       if (onUpdate) {
-        onUpdate(carRef.current.position.clone(), rotation.current, Math.abs(velocity.current) * 250, closestT);
+        onUpdate(carRef.current.position.clone(), rotation.current, Math.abs(velocity.current) * 85, closestT);
       }
     } else {
       // AI car - follows track path
