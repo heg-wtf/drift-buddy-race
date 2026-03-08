@@ -38,7 +38,8 @@ export const Car = ({
   damage = 0,
   onDamage,
   trackWidth = 10,
-  raceStarted = false
+  raceStarted = false,
+  playerProgress = 0
 }: CarProps) => {
   const carRef = useRef<THREE.Group>(null);
   const velocity = useRef(0);
