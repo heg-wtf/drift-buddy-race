@@ -104,9 +104,7 @@ class SoundEngine {
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + (final ? 0.8 : 0.3));
     
     osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start();
-    osc.stop(ctx.currentTime + (final ? 0.8 : 0.3));
+    gain.connect(this.getMasterGain());
   }
 
   playDestroy() {
