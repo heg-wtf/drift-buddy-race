@@ -11,8 +11,8 @@ const createIstanbulParkPoints = () => {
   // Wide layout, long T1→T2 straight, pronounced left T8, broader T9–T12 top section
   const pts: [number, number][] = [
     // START/FINISH straight (heading down, +z = south)
-    [40, -35],
-    [40, 0],
+    [40, -20],
+    [40, 10],
     [40, 40],
 
     // T1 — gentle right
@@ -78,10 +78,9 @@ const createIstanbulParkPoints = () => {
     [86, -110],
     [76, -92],
 
-    // T13 — heading down back to start
+    // T13 — smooth curve back to start
     [62, -68],
-    [52, -48],
-    [44, -38],
+    [48, -45],
   ];
 
   return pts.map(([x, z]) => new THREE.Vector3(x, 0, z));
