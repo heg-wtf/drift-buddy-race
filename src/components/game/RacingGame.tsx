@@ -344,7 +344,7 @@ export const RacingGame = () => {
 
             {/* Lap selection */}
             <div className="flex flex-col items-center gap-3 w-full">
-              <p className="text-base text-muted-foreground tracking-wide">랩 수</p>
+              <p className="text-base text-muted-foreground tracking-wide">Laps</p>
               <div className="flex gap-4 justify-center">
                 {LAP_OPTIONS.map((laps) => (
                   <button
