@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { useMemo } from 'react';
-import { Grandstand } from './Grandstand';
+import { StartGrandstand } from './Grandstand';
 import { Cameramen, TrackBuildings } from './TrackObjects';
 
 const TRACK_POINT_COUNT = 600;
@@ -341,6 +341,9 @@ export const Track = ({ width = 10 }: TrackProps) => {
         <planeGeometry args={[width, 2.6]} />
         <meshStandardMaterial color="#f8fafc" side={THREE.DoubleSide} />
       </mesh>
+
+      {/* Grandstand at start line (outside track) */}
+      <StartGrandstand />
 
       {/* Buildings around the track */}
       <TrackBuildings />
