@@ -1,12 +1,13 @@
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { Stars } from '@react-three/drei';
+import { Sky, Cloud } from '@react-three/drei';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import * as THREE from 'three';
 import { Car } from './Car';
 import { Track } from './Track';
 import { GameHUD } from './GameHUD';
 
-const AI_COLORS = ['#ff6b6b', '#4ecdc4', '#ffe66d', '#95e1d3'];
+const AI_COLORS = ['#ff3333', '#ffcc00', '#00aaff', '#ff6600'];
+const TRACK_WIDTH = 10;
 
 const FollowCamera = ({ playerPos, playerRot }: { playerPos: THREE.Vector3 | null; playerRot: number }) => {
   const { camera } = useThree();
@@ -17,14 +18,14 @@ const FollowCamera = ({ playerPos, playerRot }: { playerPos: THREE.Vector3 | nul
     if (!playerPos) return;
     
     const idealOffset = new THREE.Vector3(
-      -Math.sin(playerRot) * 14,
-      8,
-      -Math.cos(playerRot) * 14
+      -Math.sin(playerRot) * 12,
+      6,
+      -Math.cos(playerRot) * 12
     );
     idealOffset.add(playerPos);
     
-    smoothPos.current.lerp(idealOffset, 0.05);
-    smoothLook.current.lerp(playerPos, 0.1);
+    smoothPos.current.lerp(idealOffset, 0.06);
+    smoothLook.current.lerp(playerPos, 0.12);
     
     camera.position.copy(smoothPos.current);
     camera.lookAt(smoothLook.current);
@@ -67,9 +68,7 @@ export const RacingGame = () => {
           setControls(c => ({ ...c, right: true }));
           break;
         case 'r':
-          // Reset game
-          setDamages(new Map());
-          setGameOver(false);
+          window.location.reload();
           break;
       }
     };
@@ -140,36 +139,50 @@ export const RacingGame = () => {
       <Canvas shadows>
         <FollowCamera playerPos={playerPosition} playerRot={playerRotation} />
         
-        {/* Lighting */}
-        <ambientLight intensity={0.3} />
+        {/* Daytime sky */}
+        <Sky 
+          distance={450000} 
+          sunPosition={[100, 50, 100]} 
+          inclination={0.6}
+          azimuth={0.25}
+        />
+        
+        {/* Clouds */}
+        <Cloud position={[-20, 30, -30]} speed={0.2} opacity={0.5} />
+        <Cloud position={[20, 35, -20]} speed={0.2} opacity={0.4} />
+        <Cloud position={[0, 32, 20]} speed={0.15} opacity={0.6} />
+        
+        {/* Daytime Lighting */}
+        <ambientLight intensity={0.6} />
         <directionalLight
-          position={[50, 50, 25]}
-          intensity={1}
+          position={[80, 100, 50]}
+          intensity={1.5}
           castShadow
           shadow-mapSize={[2048, 2048]}
+          shadow-camera-far={200}
+          shadow-camera-left={-100}
+          shadow-camera-right={100}
+          shadow-camera-top={100}
+          shadow-camera-bottom={-100}
         />
-        <pointLight position={[0, 20, 0]} intensity={0.5} color="#00ffcc" />
-        
-        {/* Environment */}
-        <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
-        <fog attach="fog" args={['#0a0a1a', 30, 100]} />
+        <hemisphereLight args={['#87ceeb', '#3d7a37', 0.5]} />
         
         {/* Track */}
-        <Track radius={25} width={12} />
+        <Track width={TRACK_WIDTH} />
         
         {/* Player car */}
         <Car
           id="player"
-          position={[25, 0, 0]}
-          color="#00ffcc"
+          position={[0, 0, 0]}
+          color="#00ff88"
           isPlayer
           controls={controls}
           onUpdate={handlePlayerUpdate}
           onPositionUpdate={handlePositionUpdate}
-          trackRadius={25}
           otherCars={carPositions}
           damage={playerDamage}
           onDamage={handleDamage}
+          trackWidth={TRACK_WIDTH}
         />
         
         {/* AI cars */}
@@ -177,18 +190,14 @@ export const RacingGame = () => {
           <Car
             key={index}
             id={`ai-${index}`}
-            position={[
-              Math.sin((index + 1) * Math.PI / 2.5) * 25,
-              0,
-              Math.cos((index + 1) * Math.PI / 2.5) * 25
-            ]}
+            position={[0, 0, 0]}
             color={color}
-            trackRadius={25}
             aiIndex={index}
             onPositionUpdate={handlePositionUpdate}
             otherCars={carPositions}
             damage={damages.get(`ai-${index}`) || 0}
             onDamage={handleDamage}
+            trackWidth={TRACK_WIDTH}
           />
         ))}
       </Canvas>
@@ -206,13 +215,9 @@ export const RacingGame = () => {
         <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center">
           <div className="text-center">
             <h2 className="text-5xl font-bold text-destructive mb-4">차량 파괴!</h2>
-            <p className="text-xl text-muted-foreground mb-8">다른 차량과의 충돌로 차량이 파괴되었습니다</p>
+            <p className="text-xl text-muted-foreground mb-8">충돌로 인해 차량이 파괴되었습니다</p>
             <button 
-              onClick={() => {
-                setDamages(new Map());
-                setGameOver(false);
-                window.location.reload();
-              }}
+              onClick={() => window.location.reload()}
               className="px-8 py-4 bg-primary text-primary-foreground rounded-lg text-xl font-bold hover:opacity-90 transition-opacity"
             >
               다시 시작 (R)
