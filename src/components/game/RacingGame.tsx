@@ -368,7 +368,7 @@ export const RacingGame = () => {
               className="px-5 py-2.5 rounded-xl bg-card border-2 border-border text-foreground hover:border-primary hover:bg-primary/10 transition-all pointer-events-auto flex items-center gap-2"
             >
               {soundEnabled ? '🔊' : '🔇'}
-              <span className="text-sm font-medium">사운드 {soundEnabled ? 'ON' : 'OFF'}</span>
+              <span className="text-sm font-medium">Sound {soundEnabled ? 'ON' : 'OFF'}</span>
             </button>
 
             {/* Race Start button */}
