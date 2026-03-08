@@ -347,7 +347,7 @@ export const RacingGame = () => {
       </Canvas>
       
       {/* Lap selection screen */}
-      {totalLaps === null && (
+      {showStartScreen && (
         <div className="absolute inset-0 bg-background/90 backdrop-blur-md flex items-center justify-center z-50">
           <div className="text-center">
             <h1 className="text-5xl font-bold text-primary mb-2">🏎️ Racing Game</h1>
@@ -377,22 +377,36 @@ export const RacingGame = () => {
               {LAP_OPTIONS.map((laps) => (
                 <button
                   key={laps}
-                  onClick={() => {
-                    setTotalLaps(laps);
-                    setCountdownReady(true);
-                  }}
-                  className="w-20 h-20 rounded-xl bg-card border-2 border-border text-2xl font-bold text-foreground hover:border-primary hover:bg-primary/10 transition-all pointer-events-auto"
+                  onClick={() => setSelectedLaps(laps)}
+                  className={`w-20 h-20 rounded-xl bg-card border-2 text-2xl font-bold text-foreground transition-all pointer-events-auto ${
+                    selectedLaps === laps
+                      ? 'border-primary bg-primary/10'
+                      : 'border-border hover:border-primary/50 hover:bg-primary/5'
+                  }`}
                 >
                   {laps}
                 </button>
               ))}
             </div>
+
             <button
               onClick={() => setSoundEnabled(!soundEnabled)}
               className="mt-8 px-6 py-3 rounded-xl bg-card border-2 border-border text-foreground hover:border-primary hover:bg-primary/10 transition-all pointer-events-auto flex items-center gap-2 mx-auto"
             >
               {soundEnabled ? '🔊' : '🔇'}
               <span className="text-sm font-medium">사운드 {soundEnabled ? 'ON' : 'OFF'}</span>
+            </button>
+
+            {/* Race Start button */}
+            <button
+              onClick={() => {
+                setTotalLaps(selectedLaps);
+                setShowStartScreen(false);
+                setCountdownReady(true);
+              }}
+              className="mt-6 px-10 py-4 rounded-xl bg-primary text-primary-foreground text-2xl font-bold hover:opacity-90 transition-all pointer-events-auto"
+            >
+              🏁 Race Start
             </button>
           </div>
         </div>
