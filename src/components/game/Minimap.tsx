@@ -6,9 +6,10 @@ interface MinimapProps {
   carPositions: Map<string, THREE.Vector3>;
   playerPosition: THREE.Vector3 | null;
   trackWidth?: number;
+  playerColor?: string;
 }
 
-export const Minimap = ({ carPositions, playerPosition, trackWidth = 10 }: MinimapProps) => {
+export const Minimap = ({ carPositions, playerPosition, trackWidth = 10, playerColor = '#00ff88' }: MinimapProps) => {
   const mapSize = 180;
   const mapPadding = 12;
 
