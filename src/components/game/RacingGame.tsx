@@ -395,6 +395,7 @@ export const RacingGame = () => {
         carPositions={carPositions} 
         playerPosition={playerPosition}
         trackWidth={TRACK_WIDTH}
+        playerColor={playerColor}
       />
 
       {/* Lap time flash */}
