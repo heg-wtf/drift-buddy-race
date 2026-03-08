@@ -468,7 +468,7 @@ export const RacingGame = () => {
               onClick={handleRestart}
               className="px-8 py-4 bg-primary text-primary-foreground rounded-lg text-xl font-bold hover:opacity-90 transition-opacity pointer-events-auto"
             >
-              다시 시작
+              Restart
             </button>
           </div>
         </div>
