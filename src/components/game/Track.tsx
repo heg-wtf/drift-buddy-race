@@ -61,10 +61,10 @@ const createIstanbulParkPoints = () => {
     [54, 80],
     [58, 68],
     [52, 56],
-    // Turn 13 — heading down back to start
-    [40, 44],
-    [30, 32],
-    [22, 22],
+    // Turn 13 — heading down back to start (keep distance from start straight)
+    [44, 44],
+    [36, 32],
+    [28, 20],
   ];
 
   return pts.map(([x, z]) => new THREE.Vector3(x, 0, z));
