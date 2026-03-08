@@ -167,7 +167,7 @@ export const RacingGame = () => {
     if (prevProgressRef.current > 0.85 && trackProgress < 0.15) {
       setLap(prev => {
         const newLap = prev + 1;
-        if (newLap > TOTAL_LAPS) {
+        if (newLap > (totalLaps || 10)) {
           setRaceFinished(true);
         }
         return newLap;
