@@ -31,10 +31,10 @@ const createIstanbulParkPoints = () => {
     // Turn 4 — sweep up-left, well LEFT of start straight
     [80, -32],
     [56, -38],
-    // Turn 5 — sharp left heading up (x must be < 0 to avoid start straight at x=30)
-    [30, -80],
-    [10, -72],
-    [-8, -56],
+    // Turn 5 — sharp left heading up (well left of start straight at x=30)
+    [6, -70],
+    [-10, -58],
+    [-18, -44],
     // Turn 6 — continuing up left side
     [-20, -36],
     [-28, -14],
