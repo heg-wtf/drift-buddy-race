@@ -11,7 +11,7 @@ import { soundEngine } from './SoundEngine';
 
 const AI_COLORS: string[] = []; // No AI cars
 const TRACK_WIDTH = 20;
-const TOTAL_LAPS = 10;
+const LAP_OPTIONS = [3, 5, 7, 10];
 
 const FollowCamera = ({ playerPos, playerRot }: { playerPos: THREE.Vector3 | null; playerRot: number }) => {
   const { camera } = useThree();
@@ -56,6 +56,8 @@ export const RacingGame = () => {
   const [playerProgress, setPlayerProgress] = useState(0);
   const [lap, setLap] = useState(1);
   const [raceFinished, setRaceFinished] = useState(false);
+  const [totalLaps, setTotalLaps] = useState<number | null>(null); // null = not selected yet
+  const [countdownReady, setCountdownReady] = useState(false);
   const prevProgressRef = useRef(0);
   const prevDamageRef = useRef<Map<string, number>>(new Map());
 
@@ -165,7 +167,7 @@ export const RacingGame = () => {
     if (prevProgressRef.current > 0.85 && trackProgress < 0.15) {
       setLap(prev => {
         const newLap = prev + 1;
-        if (newLap > TOTAL_LAPS) {
+        if (newLap > (totalLaps || 10)) {
           setRaceFinished(true);
         }
         return newLap;
@@ -208,7 +210,7 @@ export const RacingGame = () => {
   }, [soundInitialized]);
 
   const playerDamage = damages.get('player') || 0;
-  const currentLap = Math.min(lap, TOTAL_LAPS);
+  const currentLap = Math.min(lap, totalLaps || 10);
 
   return (
     <div className="w-full h-screen bg-background relative">
@@ -275,14 +277,38 @@ export const RacingGame = () => {
         ))}
       </Canvas>
       
-      <StartCountdown onStart={handleRaceStart} onBeep={handleCountdownBeep} />
+      {/* Lap selection screen */}
+      {totalLaps === null && (
+        <div className="absolute inset-0 bg-background/90 backdrop-blur-md flex items-center justify-center z-50">
+          <div className="text-center">
+            <h1 className="text-5xl font-bold text-primary mb-2">🏎️ Racing Game</h1>
+            <p className="text-lg text-muted-foreground mb-10">랩 수를 선택하세요</p>
+            <div className="flex gap-4">
+              {LAP_OPTIONS.map((laps) => (
+                <button
+                  key={laps}
+                  onClick={() => {
+                    setTotalLaps(laps);
+                    setCountdownReady(true);
+                  }}
+                  className="w-20 h-20 rounded-xl bg-card border-2 border-border text-2xl font-bold text-foreground hover:border-primary hover:bg-primary/10 transition-all pointer-events-auto"
+                >
+                  {laps}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {countdownReady && <StartCountdown onStart={handleRaceStart} onBeep={handleCountdownBeep} />}
       
       <GameHUD
         speed={speed}
         position={1}
         totalCars={5}
         lap={currentLap}
-        totalLaps={TOTAL_LAPS}
+        totalLaps={totalLaps || 10}
         damage={playerDamage}
       />
 
@@ -297,7 +323,7 @@ export const RacingGame = () => {
         <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="text-center">
             <h2 className="text-5xl font-bold text-primary mb-4">🏁 레이스 완료!</h2>
-            <p className="text-xl text-muted-foreground mb-8">{TOTAL_LAPS}랩을 완주했습니다!</p>
+            <p className="text-xl text-muted-foreground mb-8">{totalLaps}랩을 완주했습니다!</p>
             <button 
               onClick={() => window.location.reload()}
               className="px-8 py-4 bg-primary text-primary-foreground rounded-lg text-xl font-bold hover:opacity-90 transition-opacity pointer-events-auto"
