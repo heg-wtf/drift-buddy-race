@@ -70,7 +70,7 @@ export const Minimap = ({ carPositions, playerPosition, trackWidth = 10 }: Minim
   };
 
   return (
-    <div className="absolute top-32 right-8 bg-card/80 backdrop-blur-sm rounded-lg p-3 border border-border">
+    <div className="absolute top-8 right-8 bg-card/80 backdrop-blur-sm rounded-lg p-3 border border-border">
       <div className="text-muted-foreground text-xs mb-1">미니맵</div>
       <svg width={mapSize} height={mapSize} viewBox={`0 0 ${mapSize} ${mapSize}`}>
         <path d={trackPathD} fill="none" stroke="#222" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
