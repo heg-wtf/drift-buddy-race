@@ -79,9 +79,7 @@ class SoundEngine {
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
     
     osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start();
-    osc.stop(ctx.currentTime + 0.4);
+    gain.connect(this.getMasterGain());
     
     // Crunch noise
     noise.type = 'sawtooth';
