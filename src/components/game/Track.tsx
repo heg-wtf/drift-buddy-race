@@ -2,48 +2,105 @@ import * as THREE from 'three';
 import { useMemo } from 'react';
 
 const TRACK_POINT_COUNT = 600;
+const MIN_SAFE_DISTANCE = 35; // Must be > track width (20) + margin
 
-// Lusail Qatar International Circuit — re-traced with wide spacing
-// Simple non-crossing circuit with interesting turns
-// One single loop — guaranteed no overlaps
-const createLusailPoints = () => {
+// Istanbul Park Circuit — traced from reference, 300x250 scale
+// Direction: START heading down → Turn 1 → clockwise loop
+const createIstanbulParkPoints = () => {
   const pts: [number, number][] = [
-    // Start/finish straight (bottom, left→right)
-    [-30, -70],
-    [0, -70],
-    [30, -70],
-    // Turn 1 — sweeping right
-    [55, -64],
-    [68, -50],
-    [74, -32],
-    // Right straight (going up)
-    [76, -10],
-    [74, 12],
-    // Turn 2 — top-right, heading left
-    [66, 30],
-    [52, 42],
-    // Top section — S-curve going left
-    [34, 46],
-    [16, 42],
-    [0, 50],
-    [-18, 56],
-    [-36, 50],
-    [-50, 42],
-    // Turn 3 — top-left
-    [-62, 28],
-    [-66, 10],
-    // Left straight (going down)
-    [-64, -10],
-    [-58, -28],
-    // Turn 4 — bottom-left chicane
-    [-48, -42],
-    [-56, -54],
-    [-50, -64],
-    // Final straight back to start
-    [-40, -70],
+    // START/FINISH straight (vertical, heading down) — center-right area
+    [20, 10],
+    [20, -10],
+    [22, -30],
+    // Turn 1 — right, heading toward bottom-right straight
+    [30, -48],
+    [44, -58],
+    [64, -64],
+    // Long bottom straight (going right)
+    [84, -66],
+    [104, -66],
+    [124, -64],
+    // Turn 2 — hairpin at far right
+    [140, -56],
+    [146, -42],
+    [140, -28],
+    // Turn 3 — heading back left along bottom
+    [124, -22],
+    [104, -26],
+    [84, -34],
+    // Turn 4 — sweeping left-up
+    [60, -44],
+    [40, -48],
+    [20, -46],
+    // Turn 5 — sharp left going up-left
+    [4, -38],
+    [-8, -26],
+    // Turn 6 — continuing up left side
+    [-16, -12],
+    [-20, 4],
+    // Turn 7 — left side going up
+    [-28, 22],
+    [-38, 38],
+    // Turn 8 — famous multi-apex left (big sweeper going up-right)
+    [-52, 52],
+    [-64, 68],
+    [-70, 84],
+    [-66, 100],
+    // Turn 9 — hairpin at top-left
+    [-54, 110],
+    [-38, 114],
+    [-24, 108],
+    // Turn 10 — heading right across top
+    [-12, 96],
+    [0, 86],
+    [14, 82],
+    // Turn 11 — slight kink
+    [28, 80],
+    [42, 84],
+    // Turn 12 — sharp right at top-right heading down
+    [54, 80],
+    [58, 68],
+    [52, 56],
+    // Turn 13 — heading down back to start
+    [40, 44],
+    [30, 32],
+    [22, 22],
   ];
 
   return pts.map(([x, z]) => new THREE.Vector3(x, 0, z));
+};
+
+// Validate track: check no non-adjacent segments are closer than MIN_SAFE_DISTANCE
+const validateTrack = (curve: THREE.CatmullRomCurve3, samples: number) => {
+  const points = curve.getPoints(samples);
+  const minIndexGap = Math.floor(samples * 0.08); // ~8% of track apart = "non-adjacent"
+  let violations = 0;
+
+  for (let i = 0; i < points.length; i++) {
+    for (let j = i + minIndexGap; j < points.length; j++) {
+      // Skip points near the seam (start≈end for closed curve)
+      if (j > points.length - minIndexGap && i < minIndexGap) continue;
+      
+      const dx = points[i].x - points[j].x;
+      const dz = points[i].z - points[j].z;
+      const dist = Math.sqrt(dx * dx + dz * dz);
+      
+      if (dist < MIN_SAFE_DISTANCE) {
+        violations++;
+        if (violations <= 5) {
+          console.warn(
+            `⚠️ Track overlap risk: points ${i} & ${j} are ${dist.toFixed(1)} units apart (min: ${MIN_SAFE_DISTANCE})`
+          );
+        }
+      }
+    }
+  }
+  
+  if (violations === 0) {
+    console.log('✅ Track validation passed — no overlapping segments');
+  } else {
+    console.warn(`⚠️ Track validation: ${violations} potential overlaps detected`);
+  }
 };
 
 
