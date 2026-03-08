@@ -451,7 +451,7 @@ export const RacingGame = () => {
                 ))}
               </div>
               <div className="border-t border-border pt-3 flex justify-between px-3">
-                <span className="text-sm font-bold text-muted-foreground">총 시간</span>
+                <span className="text-sm font-bold text-muted-foreground">Total Time</span>
                 <span className="text-sm font-mono font-bold text-primary">
                   {formatTime(lapTimes.reduce((a, b) => a + b, 0))}
                 </span>
