@@ -297,8 +297,6 @@ export const RacingGame = () => {
           onUpdate={handlePlayerUpdate}
           onPositionUpdate={handlePositionUpdate}
           otherCars={carPositions}
-          damage={playerDamage}
-          onDamage={handleDamage}
           trackWidth={TRACK_WIDTH}
           raceStarted={raceStarted && !raceFinished}
         />
