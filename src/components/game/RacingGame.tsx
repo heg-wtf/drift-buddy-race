@@ -234,20 +234,8 @@ export const RacingGame = () => {
     });
   }, []);
 
-  const handleDamage = useCallback((id: string, amount: number) => {
-    setDamages(prev => {
-      const newMap = new Map(prev);
-      const current = newMap.get(id) || 0;
-      const newDamage = Math.min(current + amount, 100);
-      newMap.set(id, newDamage);
-      
-      if (id === 'player' && newDamage >= 100) {
-        setGameOver(true);
-      }
-      
-      return newMap;
-    });
-  }, []);
+
+
 
   const handleRaceStart = useCallback(() => {
     setRaceStarted(true);
