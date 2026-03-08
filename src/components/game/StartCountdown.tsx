@@ -75,7 +75,7 @@ export const StartCountdown = ({ onStart, onBeep }: StartCountdownProps) => {
         
         {phase === 0 && (
           <div className="text-xl text-muted-foreground mt-4">
-            준비하세요...
+            Get Ready...
           </div>
         )}
       </div>

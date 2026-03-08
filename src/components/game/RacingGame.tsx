@@ -323,7 +323,7 @@ export const RacingGame = () => {
             
             {/* Car color selection */}
             <div className="flex flex-col items-center gap-3 w-full">
-              <p className="text-base text-muted-foreground tracking-wide">차량 색상</p>
+              <p className="text-base text-muted-foreground tracking-wide">Car Color</p>
               <div className="flex gap-5 justify-center">
                 {CAR_COLORS.map((c) => (
                   <button
@@ -344,7 +344,7 @@ export const RacingGame = () => {
 
             {/* Lap selection */}
             <div className="flex flex-col items-center gap-3 w-full">
-              <p className="text-base text-muted-foreground tracking-wide">랩 수</p>
+              <p className="text-base text-muted-foreground tracking-wide">Laps</p>
               <div className="flex gap-4 justify-center">
                 {LAP_OPTIONS.map((laps) => (
                   <button
@@ -368,7 +368,7 @@ export const RacingGame = () => {
               className="px-5 py-2.5 rounded-xl bg-card border-2 border-border text-foreground hover:border-primary hover:bg-primary/10 transition-all pointer-events-auto flex items-center gap-2"
             >
               {soundEnabled ? '🔊' : '🔇'}
-              <span className="text-sm font-medium">사운드 {soundEnabled ? 'ON' : 'OFF'}</span>
+              <span className="text-sm font-medium">Sound {soundEnabled ? 'ON' : 'OFF'}</span>
             </button>
 
             {/* Race Start button */}
@@ -425,7 +425,7 @@ export const RacingGame = () => {
       {showLastLap && lastLapTime !== null && !raceFinished && (
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 z-40 animate-pulse">
           <div className="bg-card/90 backdrop-blur-sm rounded-xl px-6 py-3 border border-border">
-            <p className="text-sm text-muted-foreground">랩 {lap - 1} 완료</p>
+            <p className="text-sm text-muted-foreground">Lap {lap - 1} Complete</p>
             <p className="text-3xl font-bold text-primary font-mono">{formatTime(lastLapTime)}</p>
           </div>
         </div>
@@ -435,15 +435,15 @@ export const RacingGame = () => {
       {raceFinished && (
         <div className="absolute inset-0 bg-background/90 backdrop-blur-md flex items-center justify-center z-50">
           <div className="text-center max-w-md w-full">
-            <h2 className="text-5xl font-bold text-primary mb-2">🏁 레이스 완료!</h2>
-            <p className="text-lg text-muted-foreground mb-6">{totalLaps}랩 완주</p>
+            <h2 className="text-5xl font-bold text-primary mb-2">🏁 Race Complete!</h2>
+            <p className="text-lg text-muted-foreground mb-6">{totalLaps} Laps Finished</p>
             
             {/* Lap times table */}
             <div className="bg-card/80 rounded-xl border border-border p-4 mb-6 text-left">
               <div className="flex flex-col gap-1 mb-3">
                 {lapTimes.map((time, i) => (
                   <div key={i} className="flex justify-between px-3 py-1.5 rounded-md odd:bg-muted/30">
-                    <span className="text-sm text-muted-foreground">랩 {i + 1}</span>
+                    <span className="text-sm text-muted-foreground">Lap {i + 1}</span>
                     <span className={`text-sm font-mono font-bold ${time === Math.min(...lapTimes) ? 'text-primary' : 'text-foreground'}`}>
                       {formatTime(time)}
                     </span>
@@ -451,13 +451,13 @@ export const RacingGame = () => {
                 ))}
               </div>
               <div className="border-t border-border pt-3 flex justify-between px-3">
-                <span className="text-sm font-bold text-muted-foreground">총 시간</span>
+                <span className="text-sm font-bold text-muted-foreground">Total Time</span>
                 <span className="text-sm font-mono font-bold text-primary">
                   {formatTime(lapTimes.reduce((a, b) => a + b, 0))}
                 </span>
               </div>
               <div className="flex justify-between px-3 mt-1">
-                <span className="text-sm font-bold text-muted-foreground">베스트 랩</span>
+                <span className="text-sm font-bold text-muted-foreground">Best Lap</span>
                 <span className="text-sm font-mono font-bold text-primary">
                   {formatTime(Math.min(...lapTimes))}
                 </span>
@@ -468,7 +468,7 @@ export const RacingGame = () => {
               onClick={handleRestart}
               className="px-8 py-4 bg-primary text-primary-foreground rounded-lg text-xl font-bold hover:opacity-90 transition-opacity pointer-events-auto"
             >
-              다시 시작
+              Restart
             </button>
           </div>
         </div>
