@@ -65,8 +65,7 @@ const createLusailPoints = () => {
   return waypoints.map(([x, z]) => new THREE.Vector3(x, 0, z));
 };
 
-  return waypoints.map(([x, z]) => new THREE.Vector3(x, 0, z));
-};
+
 
 // Build a proper triangle-strip road mesh from center points
 const createRoadGeometry = (centerPoints: THREE.Vector3[], width: number) => {
