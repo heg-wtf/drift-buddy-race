@@ -236,34 +236,59 @@ export const Car = ({
       }
     } else {
       // AI car - follows track path
+      const normalProgress = aiProgress.current < 0 ? aiProgress.current + 1 : aiProgress.current % 1;
       aiProgress.current += aiSpeed.current * delta * 60;
       if (aiProgress.current > 1) aiProgress.current -= 1;
       
-      // Check if AI is close to player and needs to avoid
+      // Improved collision avoidance with player
       let avoidOffset = 0;
+      let shouldSlowDown = false;
+      
       if (otherCars) {
         const playerPos = otherCars.get('player');
         if (playerPos) {
-          const distToPlayer = carRef.current.position.distanceTo(playerPos);
-          if (distToPlayer < 6) {
-            // Steer away from player - move to the side
-            const toPlayer = playerPos.clone().sub(carRef.current.position).normalize();
-            const currentDir = new THREE.Vector3(
-              Math.sin(carRef.current.rotation.y), 0, Math.cos(carRef.current.rotation.y)
-            ).normalize();
-            const cross = currentDir.cross(toPlayer).y;
-            avoidOffset = cross > 0 ? -2.5 : 2.5;
+          const myPos = carRef.current.position.clone();
+          const distToPlayer = myPos.distanceTo(playerPos);
+          
+          if (distToPlayer < 8) {
+            // Calculate direction to player
+            const toPlayer = playerPos.clone().sub(myPos);
+            toPlayer.y = 0;
             
-            // Slow down a bit if very close behind
-            if (distToPlayer < 3) {
-              aiProgress.current -= aiSpeed.current * delta * 30; // slow down
+            // Get current forward direction
+            const forward = new THREE.Vector3(
+              Math.sin(carRef.current.rotation.y), 
+              0, 
+              Math.cos(carRef.current.rotation.y)
+            );
+            
+            // Check if player is ahead
+            const dotForward = forward.dot(toPlayer.clone().normalize());
+            
+            if (dotForward > 0.3 && distToPlayer < 6) {
+              // Player is ahead - steer away
+              const right = new THREE.Vector3(-forward.z, 0, forward.x);
+              const dotRight = right.dot(toPlayer.clone().normalize());
+              avoidOffset = dotRight > 0 ? -3.5 : 3.5;
+              shouldSlowDown = true;
+            } else if (distToPlayer < 4) {
+              // Player is close - just move away
+              const right = new THREE.Vector3(-forward.z, 0, forward.x);
+              const dotRight = right.dot(toPlayer.clone().normalize());
+              avoidOffset = dotRight > 0 ? -2.5 : 2.5;
             }
           }
         }
       }
       
-      const currentPoint = trackPath.current.getPointAt(aiProgress.current % 1);
-      const nextPoint = trackPath.current.getPointAt((aiProgress.current + 0.01) % 1);
+      // Slow down when avoiding
+      if (shouldSlowDown) {
+        aiProgress.current -= aiSpeed.current * delta * 40;
+      }
+      
+      const progressT = aiProgress.current < 0 ? aiProgress.current + 1 : aiProgress.current % 1;
+      const currentPoint = trackPath.current.getPointAt(progressT);
+      const nextPoint = trackPath.current.getPointAt((progressT + 0.01) % 1);
       
       const direction = new THREE.Vector3().subVectors(nextPoint, currentPoint).normalize();
       const perpendicular = new THREE.Vector3(-direction.z, 0, direction.x);
