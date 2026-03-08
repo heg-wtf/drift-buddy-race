@@ -190,6 +190,7 @@ export const RacingGame = () => {
         const newLap = prev + 1;
         if (newLap > (totalLaps || 10)) {
           setRaceFinished(true);
+          soundEngine.stopEngine();
         }
         return newLap;
       });
