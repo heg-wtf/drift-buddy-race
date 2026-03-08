@@ -316,7 +316,7 @@ export const RacingGame = () => {
           position={[0, 0, 0]}
           color={playerColor}
           isPlayer
-          controls={raceStarted && !raceFinished ? controls : { forward: false, backward: false, left: false, right: false }}
+          controls={raceStarted && !raceFinished ? controls : { forward: false, backward: false, left: false, right: false, boost: false }}
           onUpdate={handlePlayerUpdate}
           onPositionUpdate={handlePositionUpdate}
           otherCars={carPositions}
