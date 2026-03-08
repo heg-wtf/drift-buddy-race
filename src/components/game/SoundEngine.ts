@@ -89,8 +89,7 @@ class SoundEngine {
     noiseGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
     
     noise.connect(noiseGain);
-    noiseGain.connect(ctx.destination);
-    noise.start();
+    noiseGain.connect(this.getMasterGain());
     noise.stop(ctx.currentTime + 0.3);
   }
 
