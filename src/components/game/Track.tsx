@@ -4,61 +4,46 @@ import { useMemo } from 'react';
 const TRACK_POINT_COUNT = 600;
 
 // Lusail Qatar International Circuit — re-traced with wide spacing
-// Track width = 20, so parallel sections must be 30+ apart
+// Simple non-crossing circuit with interesting turns
+// One single loop — guaranteed no overlaps
 const createLusailPoints = () => {
-  const waypoints: [number, number][] = [
-    // Start/finish straight (bottom, running left→right)
-    [-10, -80],
-    [10, -80],
-    [30, -80],
-    [50, -78],
-    // Turn 1 — long right sweep upward
-    [65, -70],
-    [72, -58],
-    [75, -42],
-    // Straight up right side
-    [76, -24],
-    [75, -6],
-    // Turn 2 — right into top section
-    [70, 10],
-    [62, 22],
-    // Turn 3 — S-curve section (replacing tight loop)
-    [50, 30],
-    [40, 40],
-    [24, 48],
-    // S-curve mid
-    [8, 52],
-    [-6, 48],
-    [-14, 40],
-    // S-curve exit — flowing left across top
-    [-8, 32],
-    [4, 28],
-    [12, 34],
-    // Turn 7 — top-left peak
-    [-12, 58],
-    [-24, 62],
-    [-36, 58],
-    // Turn 8 — down left side
-    [-44, 48],
-    [-48, 36],
-    [-46, 22],
-    // Turn 9 — slight right
-    [-40, 10],
-    [-36, 0],
-    // Turn 10 — left kink
-    [-40, -12],
-    [-48, -22],
-    [-54, -34],
-    // Turn 11 — bottom-left sweep
-    [-56, -48],
-    [-52, -60],
-    [-44, -70],
+  const pts: [number, number][] = [
+    // Start/finish straight (bottom, left→right)
+    [-30, -70],
+    [0, -70],
+    [30, -70],
+    // Turn 1 — sweeping right
+    [55, -64],
+    [68, -50],
+    [74, -32],
+    // Right straight (going up)
+    [76, -10],
+    [74, 12],
+    // Turn 2 — top-right, heading left
+    [66, 30],
+    [52, 42],
+    // Top section — S-curve going left
+    [34, 46],
+    [16, 42],
+    [0, 50],
+    [-18, 56],
+    [-36, 50],
+    [-50, 42],
+    // Turn 3 — top-left
+    [-62, 28],
+    [-66, 10],
+    // Left straight (going down)
+    [-64, -10],
+    [-58, -28],
+    // Turn 4 — bottom-left chicane
+    [-48, -42],
+    [-56, -54],
+    [-50, -64],
     // Final straight back to start
-    [-34, -76],
-    [-20, -80],
+    [-40, -70],
   ];
 
-  return waypoints.map(([x, z]) => new THREE.Vector3(x, 0, z));
+  return pts.map(([x, z]) => new THREE.Vector3(x, 0, z));
 };
 
 
