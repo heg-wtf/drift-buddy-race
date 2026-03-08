@@ -213,10 +213,10 @@ export const Car = ({
 
       if (Math.abs(velocity.current) > 0.01) {
         if (controls.left) {
-          rotation.current += turnSpeed * delta * Math.sign(velocity.current);
+          rotation.current += turnSpeed * delta * Math.sign(velocity.current) * 0.6;
         }
         if (controls.right) {
-          rotation.current -= turnSpeed * delta * Math.sign(velocity.current);
+          rotation.current -= turnSpeed * delta * Math.sign(velocity.current) * 0.6;
         }
       }
 
