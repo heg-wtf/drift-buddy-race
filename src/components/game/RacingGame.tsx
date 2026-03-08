@@ -1,6 +1,6 @@
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Stars } from '@react-three/drei';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import * as THREE from 'three';
 import { Car } from './Car';
 import { Track } from './Track';
@@ -43,7 +43,9 @@ export const RacingGame = () => {
   const [playerPosition, setPlayerPosition] = useState<THREE.Vector3 | null>(null);
   const [playerRotation, setPlayerRotation] = useState(0);
   const [speed, setSpeed] = useState(0);
-  const [cameraTarget, setCameraTarget] = useState<THREE.Vector3 | null>(null);
+  const [carPositions, setCarPositions] = useState<Map<string, THREE.Vector3>>(new Map());
+  const [damages, setDamages] = useState<Map<string, number>>(new Map());
+  const [gameOver, setGameOver] = useState(false);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -63,6 +65,11 @@ export const RacingGame = () => {
         case 'd':
         case 'arrowright':
           setControls(c => ({ ...c, right: true }));
+          break;
+        case 'r':
+          // Reset game
+          setDamages(new Map());
+          setGameOver(false);
           break;
       }
     };
@@ -101,15 +108,32 @@ export const RacingGame = () => {
     setPlayerPosition(position);
     setPlayerRotation(rotation);
     setSpeed(currentSpeed);
-    
-    // Update camera target with smooth offset
-    const offset = new THREE.Vector3(
-      -Math.sin(rotation) * 12,
-      8,
-      -Math.cos(rotation) * 12
-    );
-    setCameraTarget(position.clone());
   };
+
+  const handlePositionUpdate = useCallback((id: string, position: THREE.Vector3) => {
+    setCarPositions(prev => {
+      const newMap = new Map(prev);
+      newMap.set(id, position);
+      return newMap;
+    });
+  }, []);
+
+  const handleDamage = useCallback((id: string, amount: number) => {
+    setDamages(prev => {
+      const newMap = new Map(prev);
+      const current = newMap.get(id) || 0;
+      const newDamage = Math.min(current + amount, 100);
+      newMap.set(id, newDamage);
+      
+      if (id === 'player' && newDamage >= 100) {
+        setGameOver(true);
+      }
+      
+      return newMap;
+    });
+  }, []);
+
+  const playerDamage = damages.get('player') || 0;
 
   return (
     <div className="w-full h-screen bg-background relative">
@@ -135,18 +159,24 @@ export const RacingGame = () => {
         
         {/* Player car */}
         <Car
+          id="player"
           position={[25, 0, 0]}
           color="#00ffcc"
           isPlayer
           controls={controls}
           onUpdate={handlePlayerUpdate}
+          onPositionUpdate={handlePositionUpdate}
           trackRadius={25}
+          otherCars={carPositions}
+          damage={playerDamage}
+          onDamage={handleDamage}
         />
         
         {/* AI cars */}
         {AI_COLORS.map((color, index) => (
           <Car
             key={index}
+            id={`ai-${index}`}
             position={[
               Math.sin((index + 1) * Math.PI / 2.5) * 25,
               0,
@@ -155,10 +185,12 @@ export const RacingGame = () => {
             color={color}
             trackRadius={25}
             aiIndex={index}
+            onPositionUpdate={handlePositionUpdate}
+            otherCars={carPositions}
+            damage={damages.get(`ai-${index}`) || 0}
+            onDamage={handleDamage}
           />
         ))}
-        
-        
       </Canvas>
       
       <GameHUD
@@ -166,7 +198,28 @@ export const RacingGame = () => {
         position={1}
         totalCars={5}
         lap={1}
+        damage={playerDamage}
       />
+
+      {/* Game Over overlay */}
+      {gameOver && (
+        <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-5xl font-bold text-destructive mb-4">차량 파괴!</h2>
+            <p className="text-xl text-muted-foreground mb-8">다른 차량과의 충돌로 차량이 파괴되었습니다</p>
+            <button 
+              onClick={() => {
+                setDamages(new Map());
+                setGameOver(false);
+                window.location.reload();
+              }}
+              className="px-8 py-4 bg-primary text-primary-foreground rounded-lg text-xl font-bold hover:opacity-90 transition-opacity"
+            >
+              다시 시작 (R)
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
