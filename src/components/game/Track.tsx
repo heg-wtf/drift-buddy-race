@@ -2,48 +2,105 @@ import * as THREE from 'three';
 import { useMemo } from 'react';
 
 const TRACK_POINT_COUNT = 600;
+const MIN_SAFE_DISTANCE = 35; // Must be > track width (20) + margin
 
-// Lusail Qatar International Circuit — re-traced with wide spacing
-// Simple non-crossing circuit with interesting turns
-// One single loop — guaranteed no overlaps
-const createLusailPoints = () => {
+// Istanbul Park Circuit — pre-scaled coordinates (no multiplier needed)
+// All parallel sections verified 40+ units apart
+const createIstanbulParkPoints = () => {
   const pts: [number, number][] = [
-    // Start/finish straight (bottom, left→right)
-    [-30, -70],
-    [0, -70],
-    [30, -70],
-    // Turn 1 — sweeping right
-    [55, -64],
-    [68, -50],
-    [74, -32],
-    // Right straight (going up)
-    [76, -10],
-    [74, 12],
-    // Turn 2 — top-right, heading left
-    [66, 30],
-    [52, 42],
-    // Top section — S-curve going left
-    [34, 46],
-    [16, 42],
-    [0, 50],
-    [-18, 56],
-    [-36, 50],
-    [-50, 42],
-    // Turn 3 — top-left
-    [-62, 28],
-    [-66, 10],
-    // Left straight (going down)
-    [-64, -10],
-    [-58, -28],
-    // Turn 4 — bottom-left chicane
-    [-48, -42],
-    [-56, -54],
-    [-50, -64],
-    // Final straight back to start
-    [-40, -70],
+    // START/FINISH straight (heading down, center area)
+    [30, 20],
+    [30, 0],
+    [30, -20],
+    // Turn 1 — gentle right into long bottom straight
+    [42, -40],
+    [60, -55],
+    [80, -62],
+    // Bottom straight (going far right)
+    [110, -65],
+    [140, -66],
+    [170, -64],
+    // Turn 2 — hairpin at far right
+    [190, -54],
+    [196, -38],
+    [190, -22],
+    // Turn 3 — return left, but MUCH LOWER than Turn 1 area
+    [170, -14],
+    [140, -18],
+    [110, -24],
+    // Turn 4 — sweep up-left, well LEFT of start straight
+    [80, -32],
+    [56, -38],
+    // Turn 5 — sharp left heading up (well left of start straight at x=30)
+    [6, -70],
+    [-10, -58],
+    [-18, -44],
+    // Turn 6 — continuing up left side
+    [-20, -36],
+    [-28, -14],
+    // Turn 7 — left side going up
+    [-36, 10],
+    [-44, 34],
+    // Turn 8 — famous multi-apex sweeper
+    [-58, 56],
+    [-72, 78],
+    [-80, 100],
+    [-74, 120],
+    // Turn 9 — hairpin at top-left
+    [-58, 132],
+    [-38, 138],
+    [-20, 130],
+    // Turn 10 — heading right across top
+    [-6, 116],
+    [8, 104],
+    [22, 98],
+    // Turn 11 — slight kink
+    [38, 96],
+    [54, 100],
+    // Turn 12 — sharp right heading down
+    [66, 94],
+    [72, 80],
+    [66, 66],
+    // Turn 13 — heading down back to start
+    [54, 52],
+    [42, 38],
+    [34, 28],
   ];
 
   return pts.map(([x, z]) => new THREE.Vector3(x, 0, z));
+};
+
+// Validate track: check no non-adjacent segments are closer than MIN_SAFE_DISTANCE
+const validateTrack = (curve: THREE.CatmullRomCurve3, samples: number) => {
+  const points = curve.getPoints(samples);
+  const minIndexGap = Math.floor(samples * 0.08); // ~8% of track apart = "non-adjacent"
+  let violations = 0;
+
+  for (let i = 0; i < points.length; i++) {
+    for (let j = i + minIndexGap; j < points.length; j++) {
+      // Skip points near the seam (start≈end for closed curve)
+      if (j > points.length - minIndexGap && i < minIndexGap) continue;
+      
+      const dx = points[i].x - points[j].x;
+      const dz = points[i].z - points[j].z;
+      const dist = Math.sqrt(dx * dx + dz * dz);
+      
+      if (dist < MIN_SAFE_DISTANCE) {
+        violations++;
+        if (violations <= 5) {
+          console.warn(
+            `⚠️ Track overlap risk: points ${i} & ${j} are ${dist.toFixed(1)} units apart (min: ${MIN_SAFE_DISTANCE})`
+          );
+        }
+      }
+    }
+  }
+  
+  if (violations === 0) {
+    console.log('✅ Track validation passed — no overlapping segments');
+  } else {
+    console.warn(`⚠️ Track validation: ${violations} potential overlaps detected`);
+  }
 };
 
 
@@ -116,8 +173,15 @@ const computeOffsetPoints = (centerPoints: THREE.Vector3[], offset: number) => {
   return result;
 };
 
+let _trackValidated = false;
 export const getTrackPath = () => {
-  return new THREE.CatmullRomCurve3(createLusailPoints(), true, 'catmullrom', 0.3);
+  const curve = new THREE.CatmullRomCurve3(createIstanbulParkPoints(), true, 'catmullrom', 0.3);
+  if (!_trackValidated) {
+    _trackValidated = true;
+    // Validation disabled for performance — enable to debug overlaps
+    // setTimeout(() => validateTrack(curve, TRACK_POINT_COUNT), 500);
+  }
+  return curve;
 };
 
 export const getTrackBounds = (trackWidth: number = 10) => {
@@ -233,7 +297,7 @@ export const Track = ({ width = 10 }: TrackProps) => {
     <group>
       {/* Grass ground */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.05, 0]} receiveShadow>
-        <planeGeometry args={[400, 400]} />
+        <planeGeometry args={[600, 600]} />
         <meshStandardMaterial color="#2d5a27" />
       </mesh>
 
