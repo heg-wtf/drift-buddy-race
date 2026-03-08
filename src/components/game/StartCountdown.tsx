@@ -38,7 +38,7 @@ export const StartCountdown = ({ onStart, onBeep }: StartCountdownProps) => {
   if (!visible) return null;
 
   return (
-    <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-50">
+    <div className="absolute inset-0 pointer-events-none flex items-start justify-center pt-[10vh] z-50">
       <div className="flex flex-col items-center">
         {/* F1-style light panel */}
         <div className="bg-card/90 backdrop-blur-sm rounded-2xl p-6 border border-border">
