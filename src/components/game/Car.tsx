@@ -329,18 +329,15 @@ export const Car = ({
         <pointsMaterial color="#ffaa00" size={0.15} transparent opacity={0.8} />
       </points>
 
-      {!isDestroyed ? (
-        <>
-          {/* F1 Race Car Body - Main chassis */}
-          <mesh 
-            position={[0, 0.25, 0]} 
-            castShadow
-            scale={[1 - damageLevel * 0.1, 1 - damageLevel * 0.15, 1]}
-            rotation={[damageLevel * 0.05, 0, damageLevel * 0.1]}
-          >
-            <boxGeometry args={[0.9, 0.25, 3.2]} />
-            <meshStandardMaterial color={color} metalness={0.4} roughness={0.35} />
-          </mesh>
+      <>
+        {/* F1 Race Car Body - Main chassis */}
+        <mesh 
+          position={[0, 0.25, 0]} 
+          castShadow
+        >
+          <boxGeometry args={[0.9, 0.25, 3.2]} />
+          <meshStandardMaterial color={color} metalness={0.4} roughness={0.35} />
+        </mesh>
           
           {/* Nose cone */}
           <mesh position={[0, 0.2, 1.8]} rotation={[-Math.PI / 2, 0, 0]} castShadow>
