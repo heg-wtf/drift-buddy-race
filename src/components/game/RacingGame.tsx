@@ -394,7 +394,7 @@ export const RacingGame = () => {
         totalCars={5}
         lap={currentLap}
         totalLaps={totalLaps || 10}
-        damage={playerDamage}
+        boostAvailable={!boostUsedThisLap}
         boostAvailable={!boostUsedThisLap}
         boostActive={boostActive}
       />
