@@ -277,7 +277,31 @@ export const RacingGame = () => {
         ))}
       </Canvas>
       
-      <StartCountdown onStart={handleRaceStart} onBeep={handleCountdownBeep} />
+      {/* Lap selection screen */}
+      {totalLaps === null && (
+        <div className="absolute inset-0 bg-background/90 backdrop-blur-md flex items-center justify-center z-50">
+          <div className="text-center">
+            <h1 className="text-5xl font-bold text-primary mb-2">🏎️ Racing Game</h1>
+            <p className="text-lg text-muted-foreground mb-10">랩 수를 선택하세요</p>
+            <div className="flex gap-4">
+              {LAP_OPTIONS.map((laps) => (
+                <button
+                  key={laps}
+                  onClick={() => {
+                    setTotalLaps(laps);
+                    setCountdownReady(true);
+                  }}
+                  className="w-20 h-20 rounded-xl bg-card border-2 border-border text-2xl font-bold text-foreground hover:border-primary hover:bg-primary/10 transition-all pointer-events-auto"
+                >
+                  {laps}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {countdownReady && <StartCountdown onStart={handleRaceStart} onBeep={handleCountdownBeep} />}
       
       <GameHUD
         speed={speed}
