@@ -11,6 +11,7 @@ import { soundEngine } from './SoundEngine';
 
 const AI_COLORS = ['#ff3333', '#ffcc00', '#00aaff', '#ff6600'];
 const TRACK_WIDTH = 10;
+const TOTAL_LAPS = 10;
 
 const FollowCamera = ({ playerPos, playerRot }: { playerPos: THREE.Vector3 | null; playerRot: number }) => {
   const { camera } = useThree();
@@ -52,6 +53,10 @@ export const RacingGame = () => {
   const [gameOver, setGameOver] = useState(false);
   const [raceStarted, setRaceStarted] = useState(false);
   const [soundInitialized, setSoundInitialized] = useState(false);
+  const [playerProgress, setPlayerProgress] = useState(0);
+  const [lap, setLap] = useState(1);
+  const [raceFinished, setRaceFinished] = useState(false);
+  const prevProgressRef = useRef(0);
   const prevDamageRef = useRef<Map<string, number>>(new Map());
 
   // Initialize sound on first user interaction
@@ -150,11 +155,24 @@ export const RacingGame = () => {
     };
   }, [raceStarted]);
 
-  const handlePlayerUpdate = (position: THREE.Vector3, rotation: number, currentSpeed: number) => {
+  const handlePlayerUpdate = useCallback((position: THREE.Vector3, rotation: number, currentSpeed: number, trackProgress: number) => {
     setPlayerPosition(position);
     setPlayerRotation(rotation);
     setSpeed(currentSpeed);
-  };
+    setPlayerProgress(trackProgress);
+    
+    // Detect lap completion: progress wraps from high (>0.9) to low (<0.1)
+    if (prevProgressRef.current > 0.85 && trackProgress < 0.15) {
+      setLap(prev => {
+        const newLap = prev + 1;
+        if (newLap > TOTAL_LAPS) {
+          setRaceFinished(true);
+        }
+        return newLap;
+      });
+    }
+    prevProgressRef.current = trackProgress;
+  }, []);
 
   const handlePositionUpdate = useCallback((id: string, position: THREE.Vector3) => {
     setCarPositions(prev => {
@@ -190,13 +208,13 @@ export const RacingGame = () => {
   }, [soundInitialized]);
 
   const playerDamage = damages.get('player') || 0;
+  const currentLap = Math.min(lap, TOTAL_LAPS);
 
   return (
     <div className="w-full h-screen bg-background relative">
       <Canvas shadows>
         <FollowCamera playerPos={playerPosition} playerRot={playerRotation} />
         
-        {/* Daytime sky */}
         <Sky 
           distance={450000} 
           sunPosition={[100, 50, 100]} 
@@ -204,12 +222,10 @@ export const RacingGame = () => {
           azimuth={0.25}
         />
         
-        {/* Clouds */}
         <Cloud position={[-20, 30, -30]} speed={0.2} opacity={0.5} />
         <Cloud position={[20, 35, -20]} speed={0.2} opacity={0.4} />
         <Cloud position={[0, 32, 20]} speed={0.15} opacity={0.6} />
         
-        {/* Daytime Lighting */}
         <ambientLight intensity={0.6} />
         <directionalLight
           position={[80, 100, 50]}
@@ -224,26 +240,23 @@ export const RacingGame = () => {
         />
         <hemisphereLight args={['#87ceeb', '#3d7a37', 0.5]} />
         
-        {/* Track */}
         <Track width={TRACK_WIDTH} />
         
-        {/* Player car */}
         <Car
           id="player"
           position={[0, 0, 0]}
           color="#00ff88"
           isPlayer
-          controls={raceStarted ? controls : { forward: false, backward: false, left: false, right: false }}
+          controls={raceStarted && !raceFinished ? controls : { forward: false, backward: false, left: false, right: false }}
           onUpdate={handlePlayerUpdate}
           onPositionUpdate={handlePositionUpdate}
           otherCars={carPositions}
           damage={playerDamage}
           onDamage={handleDamage}
           trackWidth={TRACK_WIDTH}
-          raceStarted={raceStarted}
+          raceStarted={raceStarted && !raceFinished}
         />
         
-        {/* AI cars */}
         {AI_COLORS.map((color, index) => (
           <Car
             key={index}
@@ -256,31 +269,47 @@ export const RacingGame = () => {
             damage={damages.get(`ai-${index}`) || 0}
             onDamage={handleDamage}
             trackWidth={TRACK_WIDTH}
-            raceStarted={raceStarted}
+            raceStarted={raceStarted && !raceFinished}
+            playerProgress={playerProgress}
           />
         ))}
       </Canvas>
       
-      {/* Start countdown */}
       <StartCountdown onStart={handleRaceStart} onBeep={handleCountdownBeep} />
       
       <GameHUD
         speed={speed}
         position={1}
         totalCars={5}
-        lap={1}
+        lap={currentLap}
+        totalLaps={TOTAL_LAPS}
         damage={playerDamage}
       />
 
-      {/* Minimap */}
       <Minimap 
         carPositions={carPositions} 
         playerPosition={playerPosition}
         trackWidth={TRACK_WIDTH}
       />
 
+      {/* Race Finished overlay */}
+      {raceFinished && (
+        <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="text-center">
+            <h2 className="text-5xl font-bold text-primary mb-4">🏁 레이스 완료!</h2>
+            <p className="text-xl text-muted-foreground mb-8">{TOTAL_LAPS}랩을 완주했습니다!</p>
+            <button 
+              onClick={() => window.location.reload()}
+              className="px-8 py-4 bg-primary text-primary-foreground rounded-lg text-xl font-bold hover:opacity-90 transition-opacity pointer-events-auto"
+            >
+              다시 시작 (R)
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Game Over overlay */}
-      {gameOver && (
+      {gameOver && !raceFinished && (
         <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="text-center">
             <h2 className="text-5xl font-bold text-destructive mb-4">차량 파괴!</h2>
