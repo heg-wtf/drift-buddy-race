@@ -137,8 +137,9 @@ class SoundEngine {
   dispose() {
     this.stopEngine();
     if (this.ctx) {
-      this.ctx.close();
+      try { this.ctx.close(); } catch (_) {}
       this.ctx = null;
+      this.masterGain = null;
     }
   }
 }
