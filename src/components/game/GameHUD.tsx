@@ -3,6 +3,7 @@ interface GameHUDProps {
   position: number;
   totalCars: number;
   lap: number;
+  totalLaps?: number;
   damage?: number;
 }
 
