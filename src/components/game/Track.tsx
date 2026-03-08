@@ -4,110 +4,46 @@ import { useMemo } from 'react';
 const TRACK_POINT_COUNT = 600;
 
 // Lusail Qatar International Circuit — re-traced with wide spacing
-// Lusail-inspired circuit — NO self-intersections
-// All parallel sections maintain 30+ unit gap (track width = 20)
+// Simple non-crossing circuit with interesting turns
+// One single loop — guaranteed no overlaps
 const createLusailPoints = () => {
-  const waypoints: [number, number][] = [
-    // Start/finish straight (bottom)
-    [-20, -75],
-    [0, -75],
-    [20, -75],
-    [40, -75],
-    // Turn 1 — wide right sweep
-    [58, -68],
-    [68, -55],
-    [72, -38],
-    // Straight up right side
-    [72, -18],
-    [70, 0],
-    // Turn 2 — right curve into top
-    [64, 16],
-    [54, 28],
-    // S-curve section (wide, no crossing)
-    [40, 36],
-    [24, 40],
-    [10, 36],
-    [0, 26],
-    [-10, 16],
-    [-24, 12],
-    [-38, 16],
-    // Top-left sweep
-    [-48, 26],
-    [-52, 40],
-    [-48, 54],
-    [-36, 62],
-    [-20, 64],
-    // Top straight
-    [0, 62],
-    [16, 56],
-    // Turn back down
-    [24, 44],
-    [20, 32],
-    // This section goes LEFT, well above the S-curve (y=32 vs S at y=16)
-    [8, 48],
-    [-8, 52],
-  ];
-
-  // Wait, this is getting tangled again. Let me think of a simple non-crossing loop.
-  // Simple approach: one big loop that never crosses, with interesting curves.
-
-  const clean: [number, number][] = [
-    // Start/finish straight (bottom, left to right)
-    [-30, -80],
-    [-10, -80],
-    [10, -80],
-    [30, -80],
-    [50, -78],
+  const pts: [number, number][] = [
+    // Start/finish straight (bottom, left→right)
+    [-30, -70],
+    [0, -70],
+    [30, -70],
     // Turn 1 — sweeping right
-    [66, -70],
-    [74, -56],
-    [76, -38],
-    // Right side straight up
-    [76, -16],
-    [74, 4],
-    // Turn 2 — top-right corner
-    [68, 20],
-    [56, 32],
-    // Top section with S-curve (going left)
-    [40, 38],
-    [22, 42],
-    [6, 38],
-    [-8, 30],
-    [-22, 26],
-    [-38, 30],
-    [-50, 38],
-    // Top-left corner
-    [-60, 50],
-    [-62, 64],
-    [-56, 76],
-    [-42, 82],
-    // Top straight going right
-    [-24, 84],
-    [-4, 80],
-    [12, 72],
-    [22, 60],
-    // Chicane going back down-left
-    [18, 48],
-    [6, 52],
-    [-8, 56],
-    [-20, 52],
-    // Mid-left, heading down
-    [-30, 42],
-    [-34, 28],
-    [-32, 12],
-    // Left side heading down
-    [-36, -4],
-    [-42, -20],
-    [-50, -36],
-    // Bottom-left corner
-    [-56, -52],
-    [-54, -66],
-    [-46, -74],
+    [55, -64],
+    [68, -50],
+    [74, -32],
+    // Right straight (going up)
+    [76, -10],
+    [74, 12],
+    // Turn 2 — top-right, heading left
+    [66, 30],
+    [52, 42],
+    // Top section — S-curve going left
+    [34, 46],
+    [16, 42],
+    [0, 50],
+    [-18, 56],
+    [-36, 50],
+    [-50, 42],
+    // Turn 3 — top-left
+    [-62, 28],
+    [-66, 10],
+    // Left straight (going down)
+    [-64, -10],
+    [-58, -28],
+    // Turn 4 — bottom-left chicane
+    [-48, -42],
+    [-56, -54],
+    [-50, -64],
     // Final straight back to start
-    [-36, -78],
+    [-40, -70],
   ];
 
-  return clean.map(([x, z]) => new THREE.Vector3(x, 0, z));
+  return pts.map(([x, z]) => new THREE.Vector3(x, 0, z));
 };
 
 
