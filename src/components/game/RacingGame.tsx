@@ -56,6 +56,8 @@ export const RacingGame = () => {
   const [playerProgress, setPlayerProgress] = useState(0);
   const [lap, setLap] = useState(1);
   const [raceFinished, setRaceFinished] = useState(false);
+  const [totalLaps, setTotalLaps] = useState<number | null>(null); // null = not selected yet
+  const [countdownReady, setCountdownReady] = useState(false);
   const prevProgressRef = useRef(0);
   const prevDamageRef = useRef<Map<string, number>>(new Map());
 
