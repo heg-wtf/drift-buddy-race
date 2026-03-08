@@ -80,6 +80,7 @@ export const RacingGame = () => {
   const [showLastLap, setShowLastLap] = useState(false);
   const [boostUsedThisLap, setBoostUsedThisLap] = useState(false);
   const [boostActive, setBoostActive] = useState(false);
+  const [firstLapCrossed, setFirstLapCrossed] = useState(false);
   const lapStartTimeRef = useRef(0);
   const raceStartTimeRef = useRef(0);
   const prevProgressRef = useRef(0);
