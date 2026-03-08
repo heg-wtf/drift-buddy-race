@@ -62,6 +62,7 @@ export const Car = ({
       const nextPoint = trackPath.current.getPointAt(startT + 0.01);
       const startDir = new THREE.Vector3().subVectors(nextPoint, startPoint).normalize();
       rotation.current = Math.atan2(startDir.x, startDir.z);
+      carRef.current.rotation.y = rotation.current;
       
       if (isPlayer) {
         // Player starts at front
