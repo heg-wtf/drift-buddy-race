@@ -340,6 +340,9 @@ export const Track = ({ width = 10 }: TrackProps) => {
         <planeGeometry args={[width, 2.6]} />
         <meshStandardMaterial color="#f8fafc" side={THREE.DoubleSide} />
       </mesh>
+
+      {/* Grandstand with spectators */}
+      <Grandstand />
     </group>
   );
 };
