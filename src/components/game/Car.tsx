@@ -63,10 +63,27 @@ export const Car = ({
       rotation.current = Math.atan2(startDir.x, startDir.z);
       
       if (isPlayer) {
+        // Player starts at front
         carRef.current.position.set(startPoint.x, 0, startPoint.z);
+        aiProgress.current = 0;
       } else {
-        const aiStart = trackPath.current.getPointAt(aiProgress.current % 1);
-        carRef.current.position.set(aiStart.x, 0, aiStart.z);
+        // AI starts behind player in a grid formation
+        const behindOffset = 0.98 - (aiIndex + 1) * 0.012; // Behind start line
+        const startT = behindOffset < 0 ? 1 + behindOffset : behindOffset;
+        const aiStartPoint = trackPath.current.getPointAt(startT);
+        const aiNextPoint = trackPath.current.getPointAt((startT + 0.01) % 1);
+        const aiDir = new THREE.Vector3().subVectors(aiNextPoint, aiStartPoint).normalize();
+        const perpendicular = new THREE.Vector3(-aiDir.z, 0, aiDir.x);
+        
+        // Stagger left/right
+        const lateralOffset = (aiIndex % 2 === 0 ? 2 : -2);
+        carRef.current.position.set(
+          aiStartPoint.x + perpendicular.x * lateralOffset, 
+          0, 
+          aiStartPoint.z + perpendicular.z * lateralOffset
+        );
+        aiProgress.current = startT;
+        rotation.current = Math.atan2(aiDir.x, aiDir.z);
       }
     }
   }, []);
