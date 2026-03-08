@@ -383,6 +383,8 @@ export const RacingGame = () => {
             >
               🏁 Race Start
             </button>
+
+            <Leaderboard />
           </div>
         </div>
       )}
