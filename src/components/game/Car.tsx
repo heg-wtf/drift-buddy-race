@@ -402,7 +402,7 @@ export const Car = ({
               {/* Tire */}
               <mesh rotation={[0, 0, Math.PI / 2]} castShadow>
                 <cylinderGeometry args={[i < 2 ? 0.22 : 0.28, i < 2 ? 0.22 : 0.28, 0.18, 16]} />
-                <meshStandardMaterial color="#1a1a1a" roughness={0.9} />
+                <meshStandardMaterial color="#444444" roughness={0.9} />
               </mesh>
               {/* Rim */}
               <mesh rotation={[0, 0, Math.PI / 2]}>
