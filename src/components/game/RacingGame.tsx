@@ -158,7 +158,7 @@ export const RacingGame = () => {
           />
         ))}
         
-        <OrbitControls enabled={false} />
+        
       </Canvas>
       
       <GameHUD
