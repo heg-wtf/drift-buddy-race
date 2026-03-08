@@ -284,7 +284,7 @@ export const RacingGame = () => {
         position={1}
         totalCars={5}
         lap={currentLap}
-        totalLaps={TOTAL_LAPS}
+        totalLaps={totalLaps || 10}
         damage={playerDamage}
       />
 
