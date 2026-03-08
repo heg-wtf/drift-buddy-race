@@ -395,7 +395,6 @@ export const RacingGame = () => {
         lap={currentLap}
         totalLaps={totalLaps || 10}
         boostAvailable={!boostUsedThisLap}
-        boostAvailable={!boostUsedThisLap}
         boostActive={boostActive}
       />
 
