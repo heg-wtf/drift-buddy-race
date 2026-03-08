@@ -60,6 +60,7 @@ export const RacingGame = () => {
   const [gameOver, setGameOver] = useState(false);
   const [raceStarted, setRaceStarted] = useState(false);
   const [soundInitialized, setSoundInitialized] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(false);
   const [playerProgress, setPlayerProgress] = useState(0);
   const [lap, setLap] = useState(1);
   const [raceFinished, setRaceFinished] = useState(false);
