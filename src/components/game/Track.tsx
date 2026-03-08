@@ -22,22 +22,18 @@ const createLusailPoints = () => {
     // Turn 2 — right into top section
     [70, 10],
     [62, 22],
-    // Turn 3 — sharp left (hairpin top-right)
+    // Turn 3 — S-curve section (replacing tight loop)
     [50, 30],
-    [38, 34],
-    [28, 40],
-    // Turn 4 — up to top-right peak
-    [22, 52],
-    [28, 62],
-    [38, 66],
-    // Turn 5 — hairpin back left
-    [46, 62],
-    [48, 52],
-    [42, 44],
-    // Turn 6 — left across top
-    [30, 38],
-    [16, 42],
-    [2, 50],
+    [40, 40],
+    [24, 48],
+    // S-curve mid
+    [8, 52],
+    [-6, 48],
+    [-14, 40],
+    // S-curve exit — flowing left across top
+    [-8, 32],
+    [4, 28],
+    [12, 34],
     // Turn 7 — top-left peak
     [-12, 58],
     [-24, 62],
