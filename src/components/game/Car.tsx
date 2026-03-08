@@ -51,6 +51,9 @@ export const Car = ({
   const knockbackVelocity = useRef(new THREE.Vector3(0, 0, 0));
   const sparksRef = useRef<THREE.Points>(null);
   const sparkTime = useRef(0);
+  const boostFlameRef = useRef<THREE.Group>(null);
+  const boostTrailRef = useRef<THREE.Points>(null);
+  const boostTime = useRef(0);
   
   const trackPath = useRef(getTrackPath());
   const trackBounds = useRef(getTrackBounds(trackWidth));
@@ -311,12 +314,21 @@ export const Car = ({
 
   const isDestroyed = damage >= 100;
   const damageLevel = Math.min(damage / 100, 1);
+  const isBoosting = isPlayer && controls?.boost;
 
   const sparkPositions = new Float32Array(30 * 3);
   for (let i = 0; i < 30; i++) {
     sparkPositions[i * 3] = (Math.random() - 0.5) * 3;
     sparkPositions[i * 3 + 1] = Math.random() * 2;
     sparkPositions[i * 3 + 2] = (Math.random() - 0.5) * 3;
+  }
+
+  // Boost trail particles
+  const boostTrailPositions = new Float32Array(50 * 3);
+  for (let i = 0; i < 50; i++) {
+    boostTrailPositions[i * 3] = (Math.random() - 0.5) * 0.8;
+    boostTrailPositions[i * 3 + 1] = Math.random() * 0.5;
+    boostTrailPositions[i * 3 + 2] = -1.8 - Math.random() * 4;
   }
 
   return (
@@ -433,6 +445,47 @@ export const Car = ({
           {/* Fire when heavily damaged */}
           {damageLevel > 0.7 && (
             <pointLight position={[0, 0.5, -1]} intensity={4} distance={5} color="#ff4400" />
+          )}
+
+          {/* Boost flames */}
+          {isBoosting && (
+            <group ref={boostFlameRef}>
+              {/* Left exhaust flame */}
+              <mesh position={[-0.25, 0.2, -1.8]}>
+                <coneGeometry args={[0.15, 1.2, 8]} />
+                <meshBasicMaterial color="#ff6600" transparent opacity={0.9} />
+              </mesh>
+              <mesh position={[-0.25, 0.2, -2.2]}>
+                <coneGeometry args={[0.08, 0.8, 8]} />
+                <meshBasicMaterial color="#ffcc00" transparent opacity={0.85} />
+              </mesh>
+              
+              {/* Right exhaust flame */}
+              <mesh position={[0.25, 0.2, -1.8]}>
+                <coneGeometry args={[0.15, 1.2, 8]} />
+                <meshBasicMaterial color="#ff6600" transparent opacity={0.9} />
+              </mesh>
+              <mesh position={[0.25, 0.2, -2.2]}>
+                <coneGeometry args={[0.08, 0.8, 8]} />
+                <meshBasicMaterial color="#ffcc00" transparent opacity={0.85} />
+              </mesh>
+
+              {/* Boost glow light */}
+              <pointLight position={[0, 0.3, -2.5]} intensity={8} distance={10} color="#ff8800" />
+
+              {/* Speed trail particles */}
+              <points ref={boostTrailRef}>
+                <bufferGeometry>
+                  <bufferAttribute
+                    attach="attributes-position"
+                    count={50}
+                    array={boostTrailPositions}
+                    itemSize={3}
+                  />
+                </bufferGeometry>
+                <pointsMaterial color="#ffaa33" size={0.12} transparent opacity={0.7} />
+              </points>
+            </group>
           )}
         </>
       ) : (

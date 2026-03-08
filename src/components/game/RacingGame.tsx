@@ -416,6 +416,22 @@ export const RacingGame = () => {
         playerColor={playerColor}
       />
 
+      {/* Boost screen effect */}
+      {boostActive && (
+        <div className="absolute inset-0 pointer-events-none z-30">
+          {/* Speed lines on sides */}
+          <div className="absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-orange-500/20 to-transparent animate-pulse" />
+          <div className="absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-orange-500/20 to-transparent animate-pulse" />
+          {/* Top/bottom vignette */}
+          <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-orange-500/15 to-transparent" />
+          <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-orange-500/15 to-transparent" />
+          {/* Center text */}
+          <div className="absolute top-12 left-1/2 -translate-x-1/2">
+            <span className="text-2xl font-bold text-orange-400 animate-pulse drop-shadow-lg">🔥 BOOST! 🔥</span>
+          </div>
+        </div>
+      )}
+
       {/* Lap time flash */}
       {showLastLap && lastLapTime !== null && !raceFinished && (
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 z-40 animate-pulse">
