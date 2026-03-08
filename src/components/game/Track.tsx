@@ -109,7 +109,6 @@ const createLusailPoints = () => {
 
   return clean.map(([x, z]) => new THREE.Vector3(x, 0, z));
 };
-};
 
 
 
