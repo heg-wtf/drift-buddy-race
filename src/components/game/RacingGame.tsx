@@ -72,6 +72,7 @@ export const RacingGame = () => {
   const [raceFinished, setRaceFinished] = useState(false);
   const [totalLaps, setTotalLaps] = useState<number | null>(null);
   const [countdownReady, setCountdownReady] = useState(false);
+  const [playerColor, setPlayerColor] = useState(CAR_COLORS[0].value);
   const [lapTimes, setLapTimes] = useState<number[]>([]);
   const [lastLapTime, setLastLapTime] = useState<number | null>(null);
   const [showLastLap, setShowLastLap] = useState(false);
