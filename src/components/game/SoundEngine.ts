@@ -40,7 +40,7 @@ class SoundEngine {
     this.engineGain.gain.value = 0.06;
     
     this.engineOsc.connect(this.engineGain);
-    this.engineGain.connect(ctx.destination);
+    this.engineGain.connect(this.getMasterGain());
     this.engineOsc.start();
     this.isPlaying = true;
   }
