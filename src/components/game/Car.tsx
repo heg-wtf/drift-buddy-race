@@ -201,11 +201,11 @@ export const Car = ({
     if (!raceStarted) return;
 
     if (isPlayer && controls) {
-      const acceleration = 1.2;
+      const acceleration = 1.0;
       const friction = 0.99;
       const turnSpeed = 2.8;
-      const maxSpeed = controls.boost ? 3.2 : 1.8;
-      const accelMultiplier = controls.boost ? 2.5 : 1;
+      const maxSpeed = controls.boost ? 1.8 : 1.18;
+      const accelMultiplier = controls.boost ? 2.0 : 1;
 
       if (controls.forward) {
         velocity.current = Math.min(velocity.current + acceleration * accelMultiplier * delta, maxSpeed);
