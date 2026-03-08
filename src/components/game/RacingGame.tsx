@@ -298,7 +298,7 @@ export const RacingGame = () => {
         <Car
           id="player"
           position={[0, 0, 0]}
-          color="#00ff88"
+          color={playerColor}
           isPlayer
           controls={raceStarted && !raceFinished ? controls : { forward: false, backward: false, left: false, right: false }}
           onUpdate={handlePlayerUpdate}
