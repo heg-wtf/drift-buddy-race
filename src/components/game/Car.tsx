@@ -380,7 +380,7 @@ export const Car = ({
           {/* Rear wing */}
           <mesh position={[0, 0.6, -1.5]} castShadow>
             <boxGeometry args={[1.2, 0.05, 0.3]} />
-            <meshStandardMaterial color={color} metalness={0.8} roughness={0.2} />
+            <meshStandardMaterial color={color} metalness={0.4} roughness={0.35} />
           </mesh>
           
           {/* Rear wing supports */}
