@@ -82,7 +82,7 @@ export const RacingGame = () => {
   const lapStartTimeRef = useRef(0);
   const raceStartTimeRef = useRef(0);
   const prevProgressRef = useRef(0);
-  const prevDamageRef = useRef<Map<string, number>>(new Map());
+  
   
   // Initialize sound on first user interaction
   useEffect(() => {
