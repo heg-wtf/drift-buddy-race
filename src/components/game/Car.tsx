@@ -297,8 +297,6 @@ export const Car = ({
     }
   });
 
-  const isDestroyed = damage >= 100;
-  const damageLevel = Math.min(damage / 100, 1);
   const isBoosting = isPlayer && controls?.boost;
 
   const sparkPositions = new Float32Array(30 * 3);
