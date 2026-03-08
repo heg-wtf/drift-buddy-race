@@ -72,6 +72,8 @@ export const RacingGame = () => {
   const [lap, setLap] = useState(1);
   const [raceFinished, setRaceFinished] = useState(false);
   const [totalLaps, setTotalLaps] = useState<number | null>(null);
+  const [selectedLaps, setSelectedLaps] = useState<number>(3);
+  const [showStartScreen, setShowStartScreen] = useState(true);
   const [countdownReady, setCountdownReady] = useState(false);
   const [playerColor, setPlayerColor] = useState(CAR_COLORS[0].value);
   const [lapTimes, setLapTimes] = useState<number[]>([]);
