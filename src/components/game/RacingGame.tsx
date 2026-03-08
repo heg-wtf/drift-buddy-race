@@ -333,7 +333,13 @@ export const RacingGame = () => {
                 </button>
               ))}
             </div>
-          </div>
+            <button
+              onClick={() => setSoundEnabled(!soundEnabled)}
+              className="mt-8 px-6 py-3 rounded-xl bg-card border-2 border-border text-foreground hover:border-primary hover:bg-primary/10 transition-all pointer-events-auto flex items-center gap-2 mx-auto"
+            >
+              {soundEnabled ? '🔊' : '🔇'}
+              <span className="text-sm font-medium">사운드 {soundEnabled ? 'ON' : 'OFF'}</span>
+            </button>
         </div>
       )}
 
