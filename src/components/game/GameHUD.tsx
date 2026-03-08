@@ -38,20 +38,23 @@ export const GameHUD = ({ speed, position, totalCars, lap, totalLaps = 10, damag
         </div>
       </div>
       
-      {/* Position display */}
-      <div className="absolute top-8 right-8 bg-card/80 backdrop-blur-sm rounded-lg p-4 border border-secondary/30">
-        <div className="text-muted-foreground text-sm mb-1">순위</div>
-        <div className="text-4xl font-bold text-secondary font-mono">
-          {position}
-          <span className="text-lg text-muted-foreground">/{totalCars}</span>
+      {/* Top-left info panel: Lap and Position */}
+      <div className="absolute top-8 left-8 space-y-3">
+        {/* Lap counter */}
+        <div className="bg-card/80 backdrop-blur-sm rounded-lg p-4 border border-accent/30">
+          <div className="text-muted-foreground text-sm mb-1">랩</div>
+          <div className="text-2xl font-bold text-accent font-mono">
+            {lap}<span className="text-lg text-muted-foreground">/{totalLaps}</span>
+          </div>
         </div>
-      </div>
-      
-      {/* Lap counter */}
-      <div className="absolute top-8 left-8 bg-card/80 backdrop-blur-sm rounded-lg p-4 border border-accent/30">
-        <div className="text-muted-foreground text-sm mb-1">랩</div>
-        <div className="text-2xl font-bold text-accent font-mono">
-          {lap}<span className="text-lg text-muted-foreground">/{totalLaps}</span>
+        
+        {/* Position display */}
+        <div className="bg-card/80 backdrop-blur-sm rounded-lg p-4 border border-secondary/30">
+          <div className="text-muted-foreground text-sm mb-1">순위</div>
+          <div className="text-2xl font-bold text-secondary font-mono">
+            {position}
+            <span className="text-lg text-muted-foreground">/{totalCars}</span>
+          </div>
         </div>
       </div>
 
