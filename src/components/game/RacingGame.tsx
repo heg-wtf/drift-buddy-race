@@ -346,7 +346,7 @@ export const RacingGame = () => {
                       ? 'border-primary scale-110 shadow-lg'
                       : 'border-border hover:border-primary/50'
                   }`}
-                  style={{ backgroundColor: c.value }}
+                  style={{ backgroundColor: c.preview }}
                 >
                   {playerColor === c.value && <span className="text-xl drop-shadow-md">✓</span>}
                 </button>
