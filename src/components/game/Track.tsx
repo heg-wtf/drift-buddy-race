@@ -174,7 +174,9 @@ const computeOffsetPoints = (centerPoints: THREE.Vector3[], offset: number) => {
 };
 
 export const getTrackPath = () => {
-  return new THREE.CatmullRomCurve3(createLusailPoints(), true, 'catmullrom', 0.3);
+  const curve = new THREE.CatmullRomCurve3(createIstanbulParkPoints(), true, 'catmullrom', 0.3);
+  validateTrack(curve, TRACK_POINT_COUNT);
+  return curve;
 };
 
 export const getTrackBounds = (trackWidth: number = 10) => {
