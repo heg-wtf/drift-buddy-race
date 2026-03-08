@@ -34,8 +34,6 @@ export const Car = ({
   aiIndex = 0,
   id,
   otherCars,
-  damage = 0,
-  onDamage,
   trackWidth = 10,
   raceStarted = false,
   playerProgress = 0
