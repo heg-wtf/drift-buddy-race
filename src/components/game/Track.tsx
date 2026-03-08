@@ -67,7 +67,7 @@ const createIstanbulParkPoints = () => {
     [34, 18],
   ];
 
-  return pts.map(([x, z]) => new THREE.Vector3(x, 0, z));
+  return pts.map(([x, z]) => new THREE.Vector3(x * 1.8, 0, z * 1.8));
 };
 
 // Validate track: check no non-adjacent segments are closer than MIN_SAFE_DISTANCE
