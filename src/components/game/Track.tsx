@@ -178,7 +178,8 @@ export const getTrackPath = () => {
   const curve = new THREE.CatmullRomCurve3(createIstanbulParkPoints(), true, 'catmullrom', 0.3);
   if (!_trackValidated) {
     _trackValidated = true;
-    setTimeout(() => validateTrack(curve, TRACK_POINT_COUNT), 100);
+    // Validation disabled for performance — enable to debug overlaps
+    // setTimeout(() => validateTrack(curve, TRACK_POINT_COUNT), 500);
   }
   return curve;
 };
