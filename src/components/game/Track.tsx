@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { useMemo } from 'react';
+import { Grandstand } from './Grandstand';
 
 const TRACK_POINT_COUNT = 600;
 const MIN_SAFE_DISTANCE = 35; // Must be > track width (20) + margin
@@ -339,6 +340,9 @@ export const Track = ({ width = 10 }: TrackProps) => {
         <planeGeometry args={[width, 2.6]} />
         <meshStandardMaterial color="#f8fafc" side={THREE.DoubleSide} />
       </mesh>
+
+      {/* Grandstand with spectators */}
+      <Grandstand />
     </group>
   );
 };
