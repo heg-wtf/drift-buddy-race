@@ -224,6 +224,7 @@ export const RacingGame = () => {
       setShowLastLap(true);
       setTimeout(() => setShowLastLap(false), 3000);
       
+      setBoostUsedThisLap(false);
       setLap(prev => {
         const newLap = prev + 1;
         if (newLap > (totalLaps || 10)) {
