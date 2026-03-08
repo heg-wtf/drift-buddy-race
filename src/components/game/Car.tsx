@@ -19,8 +19,6 @@ interface CarProps {
   aiIndex?: number;
   id: string;
   otherCars?: Map<string, THREE.Vector3>;
-  damage?: number;
-  onDamage?: (id: string, amount: number) => void;
   trackWidth?: number;
   raceStarted?: boolean;
   playerProgress?: number;
