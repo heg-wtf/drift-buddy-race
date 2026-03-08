@@ -398,20 +398,18 @@ export const Car = ({
             [-0.65, 0.2, 1.1], [0.65, 0.2, 1.1],  // Front
             [-0.65, 0.25, -1.0], [0.65, 0.25, -1.0]  // Rear
           ].map((pos, i) => (
-            damageLevel < 0.4 + i * 0.15 && (
-              <group key={i} position={pos as [number, number, number]}>
-                {/* Tire */}
-                <mesh rotation={[0, 0, Math.PI / 2]} castShadow>
-                  <cylinderGeometry args={[i < 2 ? 0.22 : 0.28, i < 2 ? 0.22 : 0.28, 0.18, 16]} />
-                  <meshStandardMaterial color="#1a1a1a" roughness={0.9} />
-                </mesh>
-                {/* Rim */}
-                <mesh rotation={[0, 0, Math.PI / 2]}>
-                  <cylinderGeometry args={[0.12, 0.12, 0.19, 8]} />
-                  <meshStandardMaterial color="#c0c0c0" metalness={0.9} roughness={0.1} />
-                </mesh>
-              </group>
-            )
+            <group key={i} position={pos as [number, number, number]}>
+              {/* Tire */}
+              <mesh rotation={[0, 0, Math.PI / 2]} castShadow>
+                <cylinderGeometry args={[i < 2 ? 0.22 : 0.28, i < 2 ? 0.22 : 0.28, 0.18, 16]} />
+                <meshStandardMaterial color="#1a1a1a" roughness={0.9} />
+              </mesh>
+              {/* Rim */}
+              <mesh rotation={[0, 0, Math.PI / 2]}>
+                <cylinderGeometry args={[0.12, 0.12, 0.19, 8]} />
+                <meshStandardMaterial color="#c0c0c0" metalness={0.9} roughness={0.1} />
+              </mesh>
+            </group>
           ))}
 
           {/* Damage smoke */}
