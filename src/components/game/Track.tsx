@@ -15,69 +15,73 @@ const createIstanbulParkPoints = () => {
     [40, 0],
     [40, 40],
 
-    // T1
-    [52, 64],
-    [78, 78],
+    // T1 — gentle right into bottom straight
+    [55, 65],
+    [85, 80],
 
-    // T1→T2 long bottom straight (very wide)
-    [130, 84],
-    [200, 86],
-    [280, 84],
-    [345, 80],
+    // T1→T2 long bottom straight (very wide, z≈86–90)
+    [140, 88],
+    [200, 90],
+    [280, 88],
+    [345, 82],
 
-    // T2 hairpin at far right
+    // T2 — big hairpin at far right
     [385, 72],
-    [400, 55],
-    [392, 35],
-    [365, 24],
+    [400, 52],
+    [390, 32],
+    [365, 22],
 
-    // Return left (above outbound straight)
-    [320, 22],
-    [250, 22],
-    [180, 24],
-    [120, 28],
-    [78, 34],
+    // Return left (z≈18–24, well above outbound z≈88)
+    [320, 18],
+    [250, 16],
+    [180, 18],
+    [120, 22],
 
-    // T3–T4 down-left sweep
-    [35, 55],
-    [-8, 70],
-    [-42, 58],
+    // T3 — continue left, staying LOW (z≈24–30, no crossing with T1 at z≈65–80)
+    [80, 26],
+    [50, 28],
+    [20, 30],
+    [-10, 28],
 
-    // T5–T7 left complex
-    [-20, 32],
-    [-36, 12],
-    [-72, 10],
-    [-94, -4],
+    // T4 — turn down-left toward T5 (z stays ≤ 40, well below T1)
+    [-35, 22],
+    [-55, 10],
 
-    // T8 multi-apex (extends left)
-    [-102, -34],
-    [-114, -62],
-    [-126, -88],
-    [-124, -112],
+    // T5 — sharp left heading up
+    [-70, -8],
+    [-80, -30],
 
-    // T9
-    [-100, -124],
-    [-64, -124],
+    // T6–T7 up the left side
+    [-90, -55],
+    [-98, -80],
 
-    // T10–T11 upper section
-    [-20, -124],
-    [12, -116],
-    [42, -102],
+    // T8 — multi-apex left sweeper (extends far left)
+    [-110, -105],
+    [-125, -130],
+    [-120, -155],
+    [-100, -170],
 
-    // T12
-    [72, -92],
-    [100, -96],
-    [128, -112],
-    [154, -118],
-    [182, -110],
+    // T9 — hairpin at top-left
+    [-72, -178],
+    [-42, -172],
 
-    // T13 into start straight
-    [202, -88],
-    [194, -62],
-    [168, -50],
-    [126, -46],
-    [82, -44],
-    [52, -42],
+    // T10 heading right across top
+    [-10, -158],
+    [20, -148],
+
+    // T11 — kink / chicane
+    [45, -142],
+    [65, -138],
+
+    // T12 — sharp right
+    [82, -134],
+    [90, -120],
+    [80, -105],
+
+    // T13 — heading down back to start
+    [65, -82],
+    [55, -58],
+    [48, -40],
     [42, -38],
   ];
 
