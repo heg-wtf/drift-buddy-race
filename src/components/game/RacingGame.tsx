@@ -57,6 +57,7 @@ export const RacingGame = () => {
     backward: false,
     left: false,
     right: false,
+    boost: false,
   });
   const [playerPosition, setPlayerPosition] = useState<THREE.Vector3 | null>(null);
   const [playerRotation, setPlayerRotation] = useState(0);
