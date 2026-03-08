@@ -187,6 +187,14 @@ export const RacingGame = () => {
     if (prevProgressRef.current > 0.85 && trackProgress < 0.15) {
       const now = performance.now();
       const lapTime = (now - lapStartTimeRef.current) / 1000;
+      
+      // Ignore first crossing (car starts behind finish line) — require at least 5 seconds
+      if (lapTime < 5) {
+        lapStartTimeRef.current = now;
+        prevProgressRef.current = trackProgress;
+        return;
+      }
+      
       lapStartTimeRef.current = now;
       
       setLapTimes(prev => [...prev, lapTime]);
