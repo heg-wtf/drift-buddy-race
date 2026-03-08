@@ -12,6 +12,12 @@ import { soundEngine } from './SoundEngine';
 const AI_COLORS: string[] = []; // No AI cars
 const TRACK_WIDTH = 20;
 const LAP_OPTIONS = [3, 5, 7, 10];
+const CAR_COLORS = [
+  { label: '빨간색', value: '#e63946' },
+  { label: '주황색', value: '#ff8c00' },
+  { label: '파란색', value: '#2563eb' },
+  { label: '흰색', value: '#f0f0f0' },
+];
 
 const formatTime = (seconds: number) => {
   const mins = Math.floor(seconds / 60);
@@ -66,6 +72,7 @@ export const RacingGame = () => {
   const [raceFinished, setRaceFinished] = useState(false);
   const [totalLaps, setTotalLaps] = useState<number | null>(null);
   const [countdownReady, setCountdownReady] = useState(false);
+  const [playerColor, setPlayerColor] = useState(CAR_COLORS[0].value);
   const [lapTimes, setLapTimes] = useState<number[]>([]);
   const [lastLapTime, setLastLapTime] = useState<number | null>(null);
   const [showLastLap, setShowLastLap] = useState(false);
@@ -291,7 +298,7 @@ export const RacingGame = () => {
         <Car
           id="player"
           position={[0, 0, 0]}
-          color="#00ff88"
+          color={playerColor}
           isPlayer
           controls={raceStarted && !raceFinished ? controls : { forward: false, backward: false, left: false, right: false }}
           onUpdate={handlePlayerUpdate}
@@ -326,8 +333,29 @@ export const RacingGame = () => {
         <div className="absolute inset-0 bg-background/90 backdrop-blur-md flex items-center justify-center z-50">
           <div className="text-center">
             <h1 className="text-5xl font-bold text-primary mb-2">🏎️ Racing Game</h1>
-            <p className="text-lg text-muted-foreground mb-10">랩 수를 선택하세요</p>
-            <div className="flex gap-4">
+            
+            {/* Car color selection */}
+            <p className="text-lg text-muted-foreground mb-4 mt-8">차량 색상</p>
+            <div className="flex gap-4 justify-center mb-10">
+              {CAR_COLORS.map((c) => (
+                <button
+                  key={c.value}
+                  onClick={() => setPlayerColor(c.value)}
+                  className={`w-16 h-16 rounded-xl border-2 transition-all pointer-events-auto flex items-center justify-center ${
+                    playerColor === c.value
+                      ? 'border-primary scale-110 shadow-lg'
+                      : 'border-border hover:border-primary/50'
+                  }`}
+                  style={{ backgroundColor: c.value }}
+                >
+                  {playerColor === c.value && <span className="text-xl drop-shadow-md">✓</span>}
+                </button>
+              ))}
+            </div>
+
+            {/* Lap selection */}
+            <p className="text-lg text-muted-foreground mb-4">랩 수</p>
+            <div className="flex gap-4 justify-center">
               {LAP_OPTIONS.map((laps) => (
                 <button
                   key={laps}
@@ -367,6 +395,7 @@ export const RacingGame = () => {
         carPositions={carPositions} 
         playerPosition={playerPosition}
         trackWidth={TRACK_WIDTH}
+        playerColor={playerColor}
       />
 
       {/* Lap time flash */}
