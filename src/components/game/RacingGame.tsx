@@ -114,7 +114,7 @@ export const RacingGame = () => {
   return (
     <div className="w-full h-screen bg-background relative">
       <Canvas shadows>
-        <FollowCamera target={cameraTarget} />
+        <FollowCamera playerPos={playerPosition} playerRot={playerRotation} />
         
         {/* Lighting */}
         <ambientLight intensity={0.3} />
