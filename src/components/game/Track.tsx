@@ -189,7 +189,7 @@ const computeOffsetPoints = (centerPoints: THREE.Vector3[], offset: number) => {
 
 let _trackValidated = false;
 export const getTrackPath = () => {
-  const curve = new THREE.CatmullRomCurve3(createIstanbulParkPoints(), true, 'catmullrom', 0.3);
+  const curve = new THREE.CatmullRomCurve3(createIstanbulParkPoints(), true, 'centripetal');
   if (!_trackValidated) {
     _trackValidated = true;
     // Validation disabled for performance — enable to debug overlaps
