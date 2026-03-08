@@ -299,7 +299,7 @@ export const RacingGame = () => {
         <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="text-center">
             <h2 className="text-5xl font-bold text-primary mb-4">🏁 레이스 완료!</h2>
-            <p className="text-xl text-muted-foreground mb-8">{TOTAL_LAPS}랩을 완주했습니다!</p>
+            <p className="text-xl text-muted-foreground mb-8">{totalLaps}랩을 완주했습니다!</p>
             <button 
               onClick={() => window.location.reload()}
               className="px-8 py-4 bg-primary text-primary-foreground rounded-lg text-xl font-bold hover:opacity-90 transition-opacity pointer-events-auto"
