@@ -42,14 +42,6 @@ export const GameHUD = ({ speed, lap, totalLaps = 10, boostAvailable = true, boo
           </div>
         </div>
         
-        {/* Position display */}
-        <div className="bg-card/80 backdrop-blur-sm rounded-lg p-4 border border-secondary/30">
-          <div className="text-muted-foreground text-sm mb-1">Position</div>
-          <div className="text-2xl font-bold text-secondary font-mono">
-            {position}
-            <span className="text-lg text-muted-foreground">/{totalCars}</span>
-          </div>
-        </div>
       </div>
       
       {/* Controls hint */}
