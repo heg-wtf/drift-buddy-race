@@ -151,6 +151,18 @@ export const RacingGame = () => {
         case 'arrowright':
           setControls(c => ({ ...c, right: true }));
           break;
+        case ' ':
+          e.preventDefault();
+          if (!boostUsedThisLap && !boostActive) {
+            setBoostUsedThisLap(true);
+            setBoostActive(true);
+            setControls(c => ({ ...c, boost: true }));
+            setTimeout(() => {
+              setBoostActive(false);
+              setControls(c => ({ ...c, boost: false }));
+            }, 2000);
+          }
+          break;
         case 'r':
           window.location.reload();
           break;
@@ -185,7 +197,7 @@ export const RacingGame = () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [raceStarted]);
+  }, [raceStarted, boostUsedThisLap, boostActive]);
 
   const handlePlayerUpdate = useCallback((position: THREE.Vector3, rotation: number, currentSpeed: number, trackProgress: number) => {
     setPlayerPosition(position);
