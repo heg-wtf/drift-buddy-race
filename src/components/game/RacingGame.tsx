@@ -1,5 +1,5 @@
-import { Canvas } from '@react-three/fiber';
-import { OrbitControls, PerspectiveCamera, Environment, Stars } from '@react-three/drei';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { Stars } from '@react-three/drei';
 import { useState, useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { Car } from './Car';
@@ -8,25 +8,29 @@ import { GameHUD } from './GameHUD';
 
 const AI_COLORS = ['#ff6b6b', '#4ecdc4', '#ffe66d', '#95e1d3'];
 
-const FollowCamera = ({ target }: { target: THREE.Vector3 | null }) => {
-  const cameraRef = useRef<THREE.PerspectiveCamera>(null);
+const FollowCamera = ({ playerPos, playerRot }: { playerPos: THREE.Vector3 | null; playerRot: number }) => {
+  const { camera } = useThree();
+  const smoothPos = useRef(new THREE.Vector3(0, 15, -20));
+  const smoothLook = useRef(new THREE.Vector3(0, 0, 0));
   
-  useEffect(() => {
-    if (cameraRef.current && target) {
-      const offset = new THREE.Vector3(0, 8, -12);
-      cameraRef.current.position.copy(target).add(offset);
-      cameraRef.current.lookAt(target);
-    }
-  }, [target]);
+  useFrame(() => {
+    if (!playerPos) return;
+    
+    const idealOffset = new THREE.Vector3(
+      -Math.sin(playerRot) * 14,
+      8,
+      -Math.cos(playerRot) * 14
+    );
+    idealOffset.add(playerPos);
+    
+    smoothPos.current.lerp(idealOffset, 0.05);
+    smoothLook.current.lerp(playerPos, 0.1);
+    
+    camera.position.copy(smoothPos.current);
+    camera.lookAt(smoothLook.current);
+  });
   
-  return (
-    <PerspectiveCamera
-      ref={cameraRef}
-      makeDefault
-      position={[0, 15, -20]}
-      fov={60}
-    />
-  );
+  return null;
 };
 
 export const RacingGame = () => {
