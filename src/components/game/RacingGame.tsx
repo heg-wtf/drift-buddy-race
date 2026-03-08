@@ -64,7 +64,6 @@ export const RacingGame = () => {
   const [speed, setSpeed] = useState(0);
   const [carPositions, setCarPositions] = useState<Map<string, THREE.Vector3>>(new Map());
   const [raceStarted, setRaceStarted] = useState(false);
-  const [raceStarted, setRaceStarted] = useState(false);
   const [soundInitialized, setSoundInitialized] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(false);
   const [playerProgress, setPlayerProgress] = useState(0);
