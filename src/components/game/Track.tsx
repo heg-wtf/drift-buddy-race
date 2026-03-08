@@ -140,7 +140,7 @@ const computeOffsetPoints = (centerPoints: THREE.Vector3[], offset: number) => {
 };
 
 export const getTrackPath = () => {
-  return new THREE.CatmullRomCurve3(createFigure8Points(), true, 'catmullrom', 0.25);
+  return new THREE.CatmullRomCurve3(createLusailPoints(), true, 'catmullrom', 0.3);
 };
 
 export const getTrackBounds = (trackWidth: number = 10) => {
