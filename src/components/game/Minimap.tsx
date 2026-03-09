@@ -1,6 +1,6 @@
-import { useMemo } from 'react';
-import * as THREE from 'three';
-import { getTrackPath, getTrackBounds } from './Track';
+import { useMemo } from "react";
+import * as THREE from "three";
+import { getTrackPath, getTrackBounds } from "./Track";
 
 interface MinimapProps {
   carPositions: Map<string, THREE.Vector3>;
@@ -9,7 +9,12 @@ interface MinimapProps {
   playerColor?: string;
 }
 
-export const Minimap = ({ carPositions, playerPosition, trackWidth = 10, playerColor = '#00ff88' }: MinimapProps) => {
+export const Minimap = ({
+  carPositions,
+  playerPosition,
+  trackWidth = 10,
+  playerColor = "#00ff88",
+}: MinimapProps) => {
   const mapSize = 180;
   const mapPadding = 12;
 
@@ -59,34 +64,65 @@ export const Minimap = ({ carPositions, playerPosition, trackWidth = 10, playerC
 
   const trackPathD = useMemo(() => {
     const pts = trackPoints.map((p) => worldToMap(p.x, p.z));
-    return pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ') + ' Z';
+    return (
+      pts.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ") + " Z"
+    );
   }, [trackPoints, bounds, scale, offsetX, offsetY]);
 
   const carColors: Record<string, string> = {
     player: playerColor,
-    'ai-0': '#ff3333',
-    'ai-1': '#ffcc00',
-    'ai-2': '#00aaff',
-    'ai-3': '#ff6600',
+    "ai-0": "#ff3333",
+    "ai-1": "#ffcc00",
+    "ai-2": "#00aaff",
+    "ai-3": "#ff6600",
   };
 
   return (
     <div className="absolute top-8 right-8 bg-card/80 backdrop-blur-sm rounded-lg p-3 border border-border">
-      <div className="text-muted-foreground text-xs mb-1">미니맵</div>
-      <svg width={mapSize} height={mapSize} viewBox={`0 0 ${mapSize} ${mapSize}`}>
-        <path d={trackPathD} fill="none" stroke="#222" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
-        <path d={trackPathD} fill="none" stroke="#555" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
+      <div className="text-muted-foreground text-xs mb-1">MINIMAP</div>
+      <svg
+        width={mapSize}
+        height={mapSize}
+        viewBox={`0 0 ${mapSize} ${mapSize}`}
+      >
+        <path
+          d={trackPathD}
+          fill="none"
+          stroke="#222"
+          strokeWidth="8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path
+          d={trackPathD}
+          fill="none"
+          stroke="#555"
+          strokeWidth="5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
 
         {Array.from(carPositions.entries()).map(([id, pos]) => {
           const mapPos = worldToMap(pos.x, pos.z);
-          const isPlayer = id === 'player';
+          const isPlayer = id === "player";
 
           return (
             <g key={id}>
               {isPlayer && (
-                <circle cx={mapPos.x} cy={mapPos.y} r={6} fill={carColors[id] || '#fff'} opacity={0.3} />
+                <circle
+                  cx={mapPos.x}
+                  cy={mapPos.y}
+                  r={6}
+                  fill={carColors[id] || "#fff"}
+                  opacity={0.3}
+                />
               )}
-              <circle cx={mapPos.x} cy={mapPos.y} r={isPlayer ? 4 : 3} fill={carColors[id] || '#fff'} />
+              <circle
+                cx={mapPos.x}
+                cy={mapPos.y}
+                r={isPlayer ? 4 : 3}
+                fill={carColors[id] || "#fff"}
+              />
             </g>
           );
         })}

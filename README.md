@@ -1,73 +1,79 @@
-# Welcome to your Lovable project
+# Drift Buddy Race
 
-## Project info
+Istanbul Park Circuit 기반의 3D 레이싱 게임. 브라우저에서 바로 플레이할 수 있습니다.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## 게임 특징
 
-## How can I edit this code?
+- Istanbul Park Circuit (CatmullRomCurve3 기반 트랙)
+- AI 상대 4대와 경쟁하는 레이스
+- 드리프트 & 부스트 메커닉
+- 실시간 미니맵, 리더보드, 랩 타임
+- 엔진 사운드 (Web Audio API)
+- 유럽풍 도시 환경: 건물, 호텔, 고딕 성당, 성, 기마상, 요트
 
-There are several ways of editing your application.
+## 조작법
 
-**Use Lovable**
+| 키 | 동작 |
+|-----|------|
+| W / ↑ | 가속 |
+| S / ↓ | 브레이크 |
+| A / ← | 좌회전 |
+| D / → | 우회전 |
+| Space | 드리프트 |
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+## 기술 스택
 
-Changes made via Lovable will be committed automatically to this repo.
+- **Runtime**: Vite + React 18 + TypeScript
+- **3D 렌더링**: Three.js (r160) + React Three Fiber + Drei
+- **UI**: shadcn/ui + Tailwind CSS + Radix UI
+- **사운드**: Web Audio API
+- **상태 관리**: React hooks (useRef, useMemo, useState)
 
-**Use your preferred IDE**
+## 설치 및 실행
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+```bash
+# 의존성 설치
+npm install
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# 개발 서버 시작
 npm run dev
+
+# 프로덕션 빌드
+npm run build
+
+# 빌드 프리뷰
+npm run preview
+
+# 린트
+npm run lint
+
+# 테스트
+npm run test
 ```
 
-**Edit a file directly in GitHub**
+## 프로젝트 구조
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+```
+src/
+├── components/
+│   ├── game/
+│   │   ├── RacingGame.tsx    # 메인 게임 루프, Canvas, 상태 관리
+│   │   ├── Car.tsx           # 플레이어/AI 차량, 물리, 파티클
+│   │   ├── Track.tsx         # 트랙 도로, 배리어, 환경(산, 바다, 잔디)
+│   │   ├── TrackObjects.tsx  # 건물, 호텔, 성당, 성, 동상, 광고판, 나무, 요트
+│   │   ├── Minimap.tsx       # SVG 기반 미니맵
+│   │   ├── GameHUD.tsx       # 속도계, 랩 정보 HUD
+│   │   ├── Leaderboard.tsx   # 실시간 순위표
+│   │   ├── Grandstand.tsx    # 관중석
+│   │   ├── StartCountdown.tsx # 시작 카운트다운
+│   │   └── SoundEngine.ts   # 엔진 사운드 관리
+│   └── ui/                   # shadcn/ui 컴포넌트
+├── pages/
+│   ├── Index.tsx             # 메인 페이지
+│   └── NotFound.tsx          # 404 페이지
+└── ...
+```
 
-**Use GitHub Codespaces**
+## 라이선스
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+Private

@@ -1,7 +1,52 @@
-import { useRef, useEffect } from 'react';
-import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
-import { getTrackPath, getTrackBounds } from './Track';
+import { useRef, useEffect, useMemo } from "react";
+import { useFrame } from "@react-three/fiber";
+import * as THREE from "three";
+import { getTrackPath, getTrackBounds } from "./Track";
+
+// Sponsor logo definitions
+const SPONSORS = [
+  {
+    name: "Marlboro",
+    background: "#ee0000",
+    textColor: "#ffffff",
+    font: "bold",
+  },
+  { name: "Chrome", background: "#4285F4", textColor: "#ffffff", font: "bold" },
+  { name: "AWS", background: "#232F3E", textColor: "#FF9900", font: "bold" },
+];
+
+// Pre-create sponsor textures once globally (shared across all cars)
+const sponsorTextureCache = new Map<string, THREE.CanvasTexture>();
+const getSponsorTexture = (sponsor: (typeof SPONSORS)[0]) => {
+  if (sponsorTextureCache.has(sponsor.name))
+    return sponsorTextureCache.get(sponsor.name)!;
+  const canvas = document.createElement("canvas");
+  canvas.width = 256;
+  canvas.height = 64;
+  const context = canvas.getContext("2d")!;
+  context.fillStyle = sponsor.background;
+  context.fillRect(0, 0, 256, 64);
+  context.fillStyle = sponsor.textColor;
+  context.font = `${sponsor.font} 36px Arial, sans-serif`;
+  context.textAlign = "center";
+  context.textBaseline = "middle";
+  context.fillText(sponsor.name, 128, 32);
+  const texture = new THREE.CanvasTexture(canvas);
+  sponsorTextureCache.set(sponsor.name, texture);
+  return texture;
+};
+
+// Pick sponsors deterministically based on car id
+const pickSponsors = (carIdentifier: string) => {
+  let hash = 0;
+  for (let i = 0; i < carIdentifier.length; i++) {
+    hash = (hash * 31 + carIdentifier.charCodeAt(i)) | 0;
+  }
+  const sideSponsor = SPONSORS[Math.abs(hash) % SPONSORS.length];
+  const noseSponsor = SPONSORS[Math.abs(hash + 1) % SPONSORS.length];
+  const rearSponsor = SPONSORS[Math.abs(hash + 2) % SPONSORS.length];
+  return { sideSponsor, noseSponsor, rearSponsor };
+};
 
 interface CarProps {
   position: [number, number, number];
@@ -14,7 +59,12 @@ interface CarProps {
     right: boolean;
     boost: boolean;
   };
-  onUpdate?: (position: THREE.Vector3, rotation: number, speed: number, trackProgress: number) => void;
+  onUpdate?: (
+    position: THREE.Vector3,
+    rotation: number,
+    speed: number,
+    trackProgress: number,
+  ) => void;
   onPositionUpdate?: (id: string, position: THREE.Vector3) => void;
   aiIndex?: number;
   id: string;
@@ -24,10 +74,10 @@ interface CarProps {
   playerProgress?: number;
 }
 
-export const Car = ({ 
-  position, 
-  color, 
-  isPlayer = false, 
+export const Car = ({
+  position,
+  color,
+  isPlayer = false,
   controls,
   onUpdate,
   onPositionUpdate,
@@ -36,7 +86,7 @@ export const Car = ({
   otherCars,
   trackWidth = 10,
   raceStarted = false,
-  playerProgress = 0
+  playerProgress = 0,
 }: CarProps) => {
   const carRef = useRef<THREE.Group>(null);
   const velocity = useRef(0);
@@ -50,9 +100,22 @@ export const Car = ({
   const boostFlameRef = useRef<THREE.Group>(null);
   const boostTrailRef = useRef<THREE.Points>(null);
   const boostTime = useRef(0);
-  
+  const wheelRefs = useRef<(THREE.Group | null)[]>([null, null, null, null]);
+  const wheelRotation = useRef(0);
+
   const trackPath = useRef(getTrackPath());
   const trackBounds = useRef(getTrackBounds(trackWidth));
+  const trackPointsForProgress = useRef(trackPath.current.getPoints(100));
+
+  // Sponsor textures per car (deterministic by id)
+  const sponsors = useMemo(() => {
+    const { sideSponsor, noseSponsor, rearSponsor } = pickSponsors(id);
+    return {
+      side: getSponsorTexture(sideSponsor),
+      nose: getSponsorTexture(noseSponsor),
+      rear: getSponsorTexture(rearSponsor),
+    };
+  }, [id]);
 
   useEffect(() => {
     if (carRef.current) {
@@ -60,10 +123,12 @@ export const Car = ({
       const startT = 0.995;
       const startPoint = trackPath.current.getPointAt(startT);
       const nextPoint = trackPath.current.getPointAt((startT + 0.01) % 1);
-      const startDir = new THREE.Vector3().subVectors(nextPoint, startPoint).normalize();
+      const startDir = new THREE.Vector3()
+        .subVectors(nextPoint, startPoint)
+        .normalize();
       rotation.current = Math.atan2(startDir.x, startDir.z);
       carRef.current.rotation.y = rotation.current;
-      
+
       if (isPlayer) {
         // Player starts at front
         carRef.current.position.set(startPoint.x, 0, startPoint.z);
@@ -76,15 +141,17 @@ export const Car = ({
         const startT = behindOffset < 0 ? 1 + behindOffset : behindOffset;
         const aiStartPoint = trackPath.current.getPointAt(startT);
         const aiNextPoint = trackPath.current.getPointAt((startT + 0.01) % 1);
-        const aiDir = new THREE.Vector3().subVectors(aiNextPoint, aiStartPoint).normalize();
+        const aiDir = new THREE.Vector3()
+          .subVectors(aiNextPoint, aiStartPoint)
+          .normalize();
         const perpendicular = new THREE.Vector3(-aiDir.z, 0, aiDir.x);
-        
+
         // Stagger left/right
-        const lateralOffset = (aiIndex % 2 === 0 ? 2 : -2);
+        const lateralOffset = aiIndex % 2 === 0 ? 2 : -2;
         carRef.current.position.set(
-          aiStartPoint.x + perpendicular.x * lateralOffset, 
-          0, 
-          aiStartPoint.z + perpendicular.z * lateralOffset
+          aiStartPoint.x + perpendicular.x * lateralOffset,
+          0,
+          aiStartPoint.z + perpendicular.z * lateralOffset,
         );
         aiProgress.current = startT;
         rotation.current = Math.atan2(aiDir.x, aiDir.z);
@@ -92,13 +159,15 @@ export const Car = ({
     }
   }, []);
 
-  const checkWallCollision = (pos: THREE.Vector3): { hit: boolean; normal: THREE.Vector3 } => {
+  const checkWallCollision = (
+    pos: THREE.Vector3,
+  ): { hit: boolean; normal: THREE.Vector3 } => {
     const { innerPoints, outerPoints, centerPoints } = trackBounds.current;
-    
+
     // Find closest point on track center
     let minDist = Infinity;
     let closestIdx = 0;
-    
+
     for (let i = 0; i < centerPoints.length; i++) {
       const dist = pos.distanceTo(centerPoints[i]);
       if (dist < minDist) {
@@ -106,38 +175,42 @@ export const Car = ({
         closestIdx = i;
       }
     }
-    
+
     // Check distance to inner and outer walls
     const innerDist = pos.distanceTo(innerPoints[closestIdx]);
     const outerDist = pos.distanceTo(outerPoints[closestIdx]);
-    
+
     const wallThreshold = 1.5;
-    
+
     if (innerDist < wallThreshold) {
       const normal = pos.clone().sub(innerPoints[closestIdx]).normalize();
       return { hit: true, normal };
     }
-    
+
     if (outerDist < wallThreshold) {
       const normal = pos.clone().sub(outerPoints[closestIdx]).normalize();
       return { hit: true, normal };
     }
-    
+
     // Check if car is off track
-    const toInner = innerPoints[closestIdx].clone().sub(centerPoints[closestIdx]);
-    const toOuter = outerPoints[closestIdx].clone().sub(centerPoints[closestIdx]);
+    const toInner = innerPoints[closestIdx]
+      .clone()
+      .sub(centerPoints[closestIdx]);
+    const toOuter = outerPoints[closestIdx]
+      .clone()
+      .sub(centerPoints[closestIdx]);
     const toCar = pos.clone().sub(centerPoints[closestIdx]);
-    
+
     const innerDir = toInner.normalize();
     const carDir = toCar.clone().normalize();
-    
+
     const distFromCenter = toCar.length();
     const halfWidth = trackWidth / 2;
-    
+
     if (distFromCenter > halfWidth - 0.5) {
       return { hit: true, normal: carDir.negate() };
     }
-    
+
     return { hit: false, normal: new THREE.Vector3() };
   };
 
@@ -146,7 +219,9 @@ export const Car = ({
 
     // Apply knockback
     if (knockbackVelocity.current.length() > 0.01) {
-      carRef.current.position.add(knockbackVelocity.current.clone().multiplyScalar(delta * 60));
+      carRef.current.position.add(
+        knockbackVelocity.current.clone().multiplyScalar(delta * 60),
+      );
       knockbackVelocity.current.multiplyScalar(0.85);
     }
 
@@ -154,10 +229,13 @@ export const Car = ({
     if (otherCars) {
       otherCars.forEach((otherPos, otherId) => {
         if (otherId === id) return;
-        
+
         const distance = carRef.current!.position.distanceTo(otherPos);
         if (distance < 2.5) {
-          const pushDir = carRef.current!.position.clone().sub(otherPos).normalize();
+          const pushDir = carRef
+            .current!.position.clone()
+            .sub(otherPos)
+            .normalize();
           knockbackVelocity.current.add(pushDir.multiplyScalar(0.25));
           velocity.current *= 0.4;
           sparkTime.current = 0.5;
@@ -193,71 +271,92 @@ export const Car = ({
       const accelMultiplier = controls.boost ? 2.0 : 1;
 
       if (controls.forward) {
-        velocity.current = Math.min(velocity.current + acceleration * accelMultiplier * delta, maxSpeed);
+        velocity.current = Math.min(
+          velocity.current + acceleration * accelMultiplier * delta,
+          maxSpeed,
+        );
       }
       if (controls.backward) {
-        velocity.current = Math.max(velocity.current - acceleration * delta, -maxSpeed * 0.5);
+        velocity.current = Math.max(
+          velocity.current - acceleration * delta,
+          -maxSpeed * 0.5,
+        );
       }
 
       velocity.current *= friction;
 
       if (Math.abs(velocity.current) > 0.01) {
         if (controls.left) {
-          rotation.current += turnSpeed * delta * Math.sign(velocity.current) * 0.6;
+          rotation.current +=
+            turnSpeed * delta * Math.sign(velocity.current) * 0.6;
         }
         if (controls.right) {
-          rotation.current -= turnSpeed * delta * Math.sign(velocity.current) * 0.6;
+          rotation.current -=
+            turnSpeed * delta * Math.sign(velocity.current) * 0.6;
         }
       }
 
       carRef.current.rotation.y = rotation.current;
-      carRef.current.position.x += Math.sin(rotation.current) * velocity.current;
-      carRef.current.position.z += Math.cos(rotation.current) * velocity.current;
+      carRef.current.position.x +=
+        Math.sin(rotation.current) * velocity.current;
+      carRef.current.position.z +=
+        Math.cos(rotation.current) * velocity.current;
 
       // Calculate player's track progress
       const pos = carRef.current.position;
       let minDist = Infinity;
       let closestT = 0;
-      const trackPts = trackPath.current.getPoints(100);
+      const trackPts = trackPointsForProgress.current;
       for (let i = 0; i < trackPts.length; i++) {
         const d = pos.distanceTo(trackPts[i]);
-        if (d < minDist) { minDist = d; closestT = i / trackPts.length; }
+        if (d < minDist) {
+          minDist = d;
+          closestT = i / trackPts.length;
+        }
       }
 
       if (onUpdate) {
-        onUpdate(carRef.current.position.clone(), rotation.current, Math.abs(velocity.current) * 85, closestT);
+        onUpdate(
+          carRef.current.position.clone(),
+          rotation.current,
+          Math.abs(velocity.current) * 85,
+          closestT,
+        );
       }
     } else {
       // AI car - follows track path
-      const normalProgress = aiProgress.current < 0 ? aiProgress.current + 1 : aiProgress.current % 1;
+      const normalProgress =
+        aiProgress.current < 0
+          ? aiProgress.current + 1
+          : aiProgress.current % 1;
       aiProgress.current += aiSpeed.current * delta * 60;
       if (aiProgress.current > 1) aiProgress.current -= 1;
-      
+
       // Improved collision avoidance with player
       let avoidOffset = 0;
       let shouldSlowDown = false;
-      
+
       if (otherCars) {
-        const playerPos = otherCars.get('player');
+        const playerPos = otherCars.get("player");
         if (playerPos) {
           const myPos = carRef.current.position.clone();
           const distToPlayer = myPos.distanceTo(playerPos);
-          
+
           if (distToPlayer < 8) {
             // Calculate direction to player
             const toPlayer = playerPos.clone().sub(myPos);
             toPlayer.y = 0;
-            
+
             // Get current forward direction
             const forward = new THREE.Vector3(
-              Math.sin(carRef.current.rotation.y), 
-              0, 
-              Math.cos(carRef.current.rotation.y)
+              Math.sin(carRef.current.rotation.y),
+              0,
+              Math.cos(carRef.current.rotation.y),
             );
-            
+
             // Check if player is ahead
             const dotForward = forward.dot(toPlayer.clone().normalize());
-            
+
             if (dotForward > 0.3 && distToPlayer < 6) {
               // Player is ahead - steer away
               const right = new THREE.Vector3(-forward.z, 0, forward.x);
@@ -273,23 +372,45 @@ export const Car = ({
           }
         }
       }
-      
+
       // Slow down when avoiding
       if (shouldSlowDown) {
         aiProgress.current -= aiSpeed.current * delta * 40;
       }
-      
-      const progressT = aiProgress.current < 0 ? aiProgress.current + 1 : aiProgress.current % 1;
+
+      const progressT =
+        aiProgress.current < 0
+          ? aiProgress.current + 1
+          : aiProgress.current % 1;
       const currentPoint = trackPath.current.getPointAt(progressT);
       const nextPoint = trackPath.current.getPointAt((progressT + 0.01) % 1);
-      
-      const direction = new THREE.Vector3().subVectors(nextPoint, currentPoint).normalize();
+
+      const direction = new THREE.Vector3()
+        .subVectors(nextPoint, currentPoint)
+        .normalize();
       const perpendicular = new THREE.Vector3(-direction.z, 0, direction.x);
-      
-      carRef.current.position.x = currentPoint.x + perpendicular.x * avoidOffset + knockbackVelocity.current.x;
-      carRef.current.position.z = currentPoint.z + perpendicular.z * avoidOffset + knockbackVelocity.current.z;
-      
+
+      carRef.current.position.x =
+        currentPoint.x +
+        perpendicular.x * avoidOffset +
+        knockbackVelocity.current.x;
+      carRef.current.position.z =
+        currentPoint.z +
+        perpendicular.z * avoidOffset +
+        knockbackVelocity.current.z;
+
       carRef.current.rotation.y = Math.atan2(direction.x, direction.z);
+    }
+
+    // Rotate wheels based on speed
+    const currentSpeed = isPlayer
+      ? Math.abs(velocity.current)
+      : aiSpeed.current * 60;
+    wheelRotation.current += currentSpeed * delta * 25;
+    for (const wheelGroup of wheelRefs.current) {
+      if (wheelGroup) {
+        wheelGroup.rotation.x = wheelRotation.current;
+      }
     }
 
     if (onPositionUpdate) {
@@ -299,20 +420,25 @@ export const Car = ({
 
   const isBoosting = isPlayer && controls?.boost;
 
-  const sparkPositions = new Float32Array(30 * 3);
-  for (let i = 0; i < 30; i++) {
-    sparkPositions[i * 3] = (Math.random() - 0.5) * 3;
-    sparkPositions[i * 3 + 1] = Math.random() * 2;
-    sparkPositions[i * 3 + 2] = (Math.random() - 0.5) * 3;
-  }
+  const sparkPositions = useMemo(() => {
+    const arr = new Float32Array(30 * 3);
+    for (let i = 0; i < 30; i++) {
+      arr[i * 3] = (Math.random() - 0.5) * 3;
+      arr[i * 3 + 1] = Math.random() * 2;
+      arr[i * 3 + 2] = (Math.random() - 0.5) * 3;
+    }
+    return arr;
+  }, []);
 
-  // Boost trail particles
-  const boostTrailPositions = new Float32Array(50 * 3);
-  for (let i = 0; i < 50; i++) {
-    boostTrailPositions[i * 3] = (Math.random() - 0.5) * 0.8;
-    boostTrailPositions[i * 3 + 1] = Math.random() * 0.5;
-    boostTrailPositions[i * 3 + 2] = -1.8 - Math.random() * 4;
-  }
+  const boostTrailPositions = useMemo(() => {
+    const arr = new Float32Array(50 * 3);
+    for (let i = 0; i < 50; i++) {
+      arr[i * 3] = (Math.random() - 0.5) * 0.8;
+      arr[i * 3 + 1] = Math.random() * 0.5;
+      arr[i * 3 + 2] = -1.8 - Math.random() * 4;
+    }
+    return arr;
+  }, []);
 
   return (
     <group ref={carRef}>
@@ -329,40 +455,85 @@ export const Car = ({
         <pointsMaterial color="#ffaa00" size={0.15} transparent opacity={0.8} />
       </points>
 
-      <>
-        {/* F1 Race Car Body - Main chassis */}
-        <mesh 
-          position={[0, 0.25, 0]} 
-          castShadow
-        >
-          <boxGeometry args={[0.9, 0.25, 3.2]} />
-          <meshStandardMaterial color={color} metalness={0.4} roughness={0.35} />
-        </mesh>
-          
-          {/* Nose cone */}
-          <mesh position={[0, 0.2, 1.8]} rotation={[-Math.PI / 2, 0, 0]} castShadow>
-            <coneGeometry args={[0.3, 0.8, 8]} />
-            <meshStandardMaterial color={color} metalness={0.4} roughness={0.35} />
+      <group scale={[2.3, 2.3, 2.3]} position={[0, 0.12, 0]}>
+        <>
+          {/* F1 Race Car Body - Main chassis */}
+          <mesh position={[0, 0.25, 0]} castShadow>
+            <boxGeometry args={[0.9, 0.25, 3.2]} />
+            <meshStandardMaterial
+              color={color}
+              metalness={0.4}
+              roughness={0.35}
+            />
           </mesh>
-          
+
+          {/* Nose cone */}
+          <mesh
+            position={[0, 0.2, 1.8]}
+            rotation={[-Math.PI / 2, 0, 0]}
+            castShadow
+          >
+            <coneGeometry args={[0.3, 0.8, 8]} />
+            <meshStandardMaterial
+              color={color}
+              metalness={0.4}
+              roughness={0.35}
+            />
+          </mesh>
+
           {/* Cockpit */}
           <mesh position={[0, 0.45, -0.3]} castShadow>
             <boxGeometry args={[0.5, 0.25, 0.8]} />
-            <meshStandardMaterial color="#111" metalness={0.95} roughness={0.05} />
+            <meshStandardMaterial
+              color="#111"
+              metalness={0.95}
+              roughness={0.05}
+            />
           </mesh>
-          
+
           {/* Halo */}
           <mesh position={[0, 0.55, -0.1]}>
             <torusGeometry args={[0.25, 0.03, 8, 16, Math.PI]} />
             <meshStandardMaterial color="#333" metalness={0.8} />
           </mesh>
-          
+
+          {/* Driver */}
+          <group position={[0, 0.42, -0.3]}>
+            {/* Helmet */}
+            <mesh position={[0, 0.18, 0]}>
+              <sphereGeometry args={[0.14, 10, 10]} />
+              <meshStandardMaterial
+                color={color}
+                metalness={0.5}
+                roughness={0.3}
+              />
+            </mesh>
+            {/* Visor */}
+            <mesh position={[0, 0.17, 0.1]} rotation={[0.2, 0, 0]}>
+              <boxGeometry args={[0.2, 0.07, 0.06]} />
+              <meshStandardMaterial
+                color="#111"
+                metalness={0.9}
+                roughness={0.1}
+              />
+            </mesh>
+            {/* Shoulders / upper body */}
+            <mesh position={[0, 0.02, 0]}>
+              <boxGeometry args={[0.32, 0.14, 0.2]} />
+              <meshStandardMaterial color="#222" roughness={0.8} />
+            </mesh>
+          </group>
+
           {/* Front wing */}
           <mesh position={[0, 0.1, 1.9]} castShadow>
             <boxGeometry args={[1.6, 0.05, 0.4]} />
-            <meshStandardMaterial color={color} metalness={0.4} roughness={0.35} />
+            <meshStandardMaterial
+              color={color}
+              metalness={0.4}
+              roughness={0.35}
+            />
           </mesh>
-          
+
           {/* Front wing end plates */}
           {[-0.75, 0.75].map((x, i) => (
             <mesh key={i} position={[x, 0.15, 1.9]} castShadow>
@@ -370,13 +541,17 @@ export const Car = ({
               <meshStandardMaterial color="#111" />
             </mesh>
           ))}
-          
+
           {/* Rear wing */}
           <mesh position={[0, 0.6, -1.5]} castShadow>
             <boxGeometry args={[1.2, 0.05, 0.3]} />
-            <meshStandardMaterial color={color} metalness={0.4} roughness={0.35} />
+            <meshStandardMaterial
+              color={color}
+              metalness={0.4}
+              roughness={0.35}
+            />
           </mesh>
-          
+
           {/* Rear wing supports */}
           {[-0.4, 0.4].map((x, i) => (
             <mesh key={i} position={[x, 0.45, -1.5]} castShadow>
@@ -384,31 +559,137 @@ export const Car = ({
               <meshStandardMaterial color="#111" />
             </mesh>
           ))}
-          
+
+          {/* Exhaust pipes */}
+          {[-0.18, 0.18].map((x, i) => (
+            <group key={`exhaust-${i}`} position={[x, 0.18, -1.65]}>
+              {/* Outer pipe */}
+              <mesh rotation={[Math.PI / 2, 0, 0]}>
+                <cylinderGeometry args={[0.08, 0.09, 0.15, 12]} />
+                <meshStandardMaterial
+                  color="#222222"
+                  metalness={0.8}
+                  roughness={0.3}
+                />
+              </mesh>
+              {/* Inner hole (dark) */}
+              <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, -0.16, 0]}>
+                <cylinderGeometry args={[0.06, 0.06, 0.02, 12]} />
+                <meshStandardMaterial
+                  color="#000000"
+                  metalness={0.9}
+                  roughness={0.1}
+                />
+              </mesh>
+              {/* Chrome tip ring */}
+              <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, -0.15, 0]}>
+                <torusGeometry args={[0.07, 0.012, 8, 16]} />
+                <meshStandardMaterial
+                  color="#cccccc"
+                  metalness={0.95}
+                  roughness={0.05}
+                />
+              </mesh>
+            </group>
+          ))}
+
           {/* Side pods */}
           {[-0.55, 0.55].map((x, i) => (
-            <mesh key={i} position={[x, 0.3, 0]} castShadow>
-              <boxGeometry args={[0.35, 0.2, 1.5]} />
-              <meshStandardMaterial color={color} metalness={0.4} roughness={0.35} />
-            </mesh>
+            <group key={i}>
+              <mesh position={[x, 0.3, 0]} castShadow>
+                <boxGeometry args={[0.35, 0.2, 1.5]} />
+                <meshStandardMaterial
+                  color={color}
+                  metalness={0.4}
+                  roughness={0.35}
+                />
+              </mesh>
+              {/* Side sponsor decal */}
+              <mesh
+                position={[x + (i === 0 ? -0.18 : 0.18), 0.32, 0]}
+                rotation={[0, i === 0 ? -Math.PI / 2 : Math.PI / 2, 0]}
+              >
+                <planeGeometry args={[1.0, 0.16]} />
+                <meshStandardMaterial
+                  map={sponsors.side}
+                  transparent
+                  side={THREE.DoubleSide}
+                />
+              </mesh>
+            </group>
           ))}
-          
-          {/* Wheels - F1 style */}
+
+          {/* Nose sponsor decal */}
+          <mesh position={[0, 0.28, 1.2]} rotation={[0, 0, 0]}>
+            <planeGeometry args={[0.6, 0.12]} />
+            <meshStandardMaterial
+              map={sponsors.nose}
+              transparent
+              side={THREE.DoubleSide}
+            />
+          </mesh>
+
+          {/* Rear wing sponsor decal */}
+          <mesh position={[0, 0.63, -1.5]} rotation={[0, Math.PI, 0]}>
+            <planeGeometry args={[0.9, 0.15]} />
+            <meshStandardMaterial
+              map={sponsors.rear}
+              transparent
+              side={THREE.DoubleSide}
+            />
+          </mesh>
+
+          {/* Wheels - F1 style with rotation */}
           {[
-            [-0.65, 0.2, 1.1], [0.65, 0.2, 1.1],  // Front
-            [-0.65, 0.25, -1.0], [0.65, 0.25, -1.0]  // Rear
+            [-0.65, 0.2, 1.1],
+            [0.65, 0.2, 1.1], // Front
+            [-0.65, 0.25, -1.0],
+            [0.65, 0.25, -1.0], // Rear
           ].map((pos, i) => (
             <group key={i} position={pos as [number, number, number]}>
-              {/* Tire */}
-              <mesh rotation={[0, 0, Math.PI / 2]} castShadow>
-                <cylinderGeometry args={[i < 2 ? 0.22 : 0.28, i < 2 ? 0.22 : 0.28, 0.18, 16]} />
-                <meshStandardMaterial color="#444444" roughness={0.9} />
-              </mesh>
-              {/* Rim */}
-              <mesh rotation={[0, 0, Math.PI / 2]}>
-                <cylinderGeometry args={[0.12, 0.12, 0.19, 8]} />
-                <meshStandardMaterial color="#c0c0c0" metalness={0.9} roughness={0.1} />
-              </mesh>
+              <group
+                ref={(element) => {
+                  wheelRefs.current[i] = element;
+                }}
+              >
+                {/* Tire */}
+                <mesh rotation={[0, 0, Math.PI / 2]} castShadow>
+                  <cylinderGeometry
+                    args={[i < 2 ? 0.22 : 0.28, i < 2 ? 0.22 : 0.28, 0.35, 16]}
+                  />
+                  <meshStandardMaterial color="#444444" roughness={0.9} />
+                </mesh>
+                {/* Tire grooves — 4 thin dark rings inset into tire */}
+                {[-0.1, -0.035, 0.035, 0.1].map((offset, g) => {
+                  const tireRadius = i < 2 ? 0.22 : 0.28;
+                  return (
+                    <mesh
+                      key={`groove-${g}`}
+                      rotation={[0, 0, Math.PI / 2]}
+                      position={[offset, 0, 0]}
+                    >
+                      <cylinderGeometry
+                        args={[
+                          tireRadius + 0.002,
+                          tireRadius + 0.002,
+                          0.02,
+                          16,
+                        ]}
+                      />
+                      <meshStandardMaterial color="#1a1a1a" roughness={0.95} />
+                    </mesh>
+                  );
+                })}
+                {/* Rim */}
+                <mesh rotation={[0, 0, Math.PI / 2]}>
+                  <cylinderGeometry args={[0.12, 0.12, 0.36, 8]} />
+                  <meshStandardMaterial
+                    color="#c0c0c0"
+                    metalness={0.9}
+                    roughness={0.1}
+                  />
+                </mesh>
+              </group>
             </group>
           ))}
 
@@ -424,7 +705,7 @@ export const Car = ({
                 <coneGeometry args={[0.08, 0.8, 8]} />
                 <meshBasicMaterial color="#ffcc00" transparent opacity={0.85} />
               </mesh>
-              
+
               {/* Right exhaust flame */}
               <mesh position={[0.25, 0.2, -1.8]}>
                 <coneGeometry args={[0.15, 1.2, 8]} />
@@ -436,7 +717,12 @@ export const Car = ({
               </mesh>
 
               {/* Boost glow light */}
-              <pointLight position={[0, 0.3, -2.5]} intensity={8} distance={10} color="#ff8800" />
+              <pointLight
+                position={[0, 0.3, -2.5]}
+                intensity={8}
+                distance={10}
+                color="#ff8800"
+              />
 
               {/* Speed trail particles */}
               <points ref={boostTrailRef}>
@@ -448,11 +734,17 @@ export const Car = ({
                     itemSize={3}
                   />
                 </bufferGeometry>
-                <pointsMaterial color="#ffaa33" size={0.12} transparent opacity={0.7} />
+                <pointsMaterial
+                  color="#ffaa33"
+                  size={0.12}
+                  transparent
+                  opacity={0.7}
+                />
               </points>
             </group>
           )}
         </>
+      </group>
     </group>
   );
 };
