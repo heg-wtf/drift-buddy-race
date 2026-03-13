@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { useMemo } from "react";
-import { getTrackPath } from "./Track";
+import { useTrackContext } from "./tracks";
 
 const TRACK_HALF_WIDTH = 10;
 const TRACK_SAMPLE_COUNT = 600;
@@ -52,23 +52,10 @@ const isSafeFromDistantTrack = (
 
 // Cameramen positioned outside corners of the track
 export const Cameramen = () => {
+  const { configuration } = useTrackContext();
+  const cameramenPositions = configuration.objectPositions.cameramenPositions;
   const mesh = useMemo(() => {
-    const positions: [number, number, number, number][] = [
-      [85, 78, -0.5, 1],
-      [432, 100, Math.PI / 2, 2],
-      [415, 140, 0.8, 2],
-      [85, 145, 0.3, 3],
-      [-5, 115, 1.2, 4],
-      [-65, 45, 1.8, 5],
-      [-110, -25, 2.0, 6],
-      [-115, -55, 2.2, 7],
-      [-145, -110, 2.5, 8],
-      [-140, -155, 3.0, 8],
-      [-60, -195, -0.5, 9],
-      [55, -160, -0.3, 11],
-      [112, -115, -1.0, 12],
-      [88, -60, -1.5, 13],
-    ];
+    const positions = cameramenPositions;
 
     const count = positions.length;
     const bodyGeo = new THREE.CylinderGeometry(0.3, 0.25, 1.4, 6);
@@ -139,7 +126,7 @@ export const Cameramen = () => {
     tripodMesh.instanceMatrix.needsUpdate = true;
 
     return { bodyMesh, headMesh, camMesh, tripodMesh };
-  }, []);
+  }, [cameramenPositions]);
 
   return (
     <group>
@@ -153,12 +140,13 @@ export const Cameramen = () => {
 
 // DHL advertising billboards along the track (InstancedMesh — 3 draw calls)
 export const TrackBillboards = () => {
+  const { trackPath, configuration } = useTrackContext();
+  const billboardStep = configuration.objectPositions.billboardStep;
   const meshes = useMemo(() => {
-    const path = getTrackPath();
-    const points = path.getPoints(TRACK_SAMPLE_COUNT);
+    const points = trackPath.getPoints(TRACK_SAMPLE_COUNT);
 
     const billboardData: { x: number; z: number; rotationY: number }[] = [];
-    const step = 40; // every 40th point — ~15 billboards around the track
+    const step = billboardStep;
 
     for (let i = 0; i < points.length; i += step) {
       const prev = points[(i - 1 + points.length) % points.length];
@@ -225,7 +213,7 @@ export const TrackBillboards = () => {
     boardMesh.instanceMatrix.needsUpdate = true;
 
     return { boardMesh };
-  }, []);
+  }, [trackPath, billboardStep]);
 
   return (
     <group>
@@ -236,12 +224,16 @@ export const TrackBillboards = () => {
 
 // AWS advertising billboards — 3 boards, black background with orange text
 export const TrackBillboardsAWS = () => {
+  const { trackPath, configuration } = useTrackContext();
+  const awsBillboardTrackFractions =
+    configuration.objectPositions.awsBillboardTrackFractions;
   const meshes = useMemo(() => {
-    const path = getTrackPath();
-    const points = path.getPoints(TRACK_SAMPLE_COUNT);
+    const points = trackPath.getPoints(TRACK_SAMPLE_COUNT);
 
-    // Pick 3 evenly spaced positions offset from DHL positions (step=40 starts at 0, so we start at 20)
-    const targetIndices = [80, 240, 440];
+    // Compute target indices from track fractions
+    const targetIndices = awsBillboardTrackFractions.map((fraction) =>
+      Math.round(fraction * TRACK_SAMPLE_COUNT),
+    );
     const billboardData: { x: number; z: number; rotationY: number }[] = [];
 
     for (const i of targetIndices) {
@@ -303,7 +295,7 @@ export const TrackBillboardsAWS = () => {
 
     boardMesh.instanceMatrix.needsUpdate = true;
     return { boardMesh };
-  }, []);
+  }, [trackPath, awsBillboardTrackFractions]);
 
   return (
     <group>
@@ -314,6 +306,8 @@ export const TrackBillboardsAWS = () => {
 
 // Qatar Airways — single ground-level ad board near start straight
 export const TrackAdBoards = () => {
+  const { configuration } = useTrackContext();
+  const adBoardPosition = configuration.objectPositions.adBoardPosition;
   const texture = useMemo(() => {
     const canvas = document.createElement("canvas");
     canvas.width = 512;
@@ -331,9 +325,8 @@ export const TrackAdBoards = () => {
     return new THREE.CanvasTexture(canvas);
   }, []);
 
-  // Start straight outer side: track at x=40, outer barrier ~x=51
   return (
-    <mesh position={[52, 0.4, 10]} rotation={[0, 0, 0]}>
+    <mesh position={adBoardPosition} rotation={[0, 0, 0]}>
       <boxGeometry args={[0.05, 0.7, 8]} />
       <meshStandardMaterial map={texture} roughness={0.5} metalness={0.05} />
     </mesh>
@@ -342,9 +335,9 @@ export const TrackAdBoards = () => {
 
 // Trees placed along track — InstancedMesh for performance (only 2 draw calls)
 export const TrackTrees = () => {
+  const { trackPath } = useTrackContext();
   const meshes = useMemo(() => {
-    const path = getTrackPath();
-    const points = path.getPoints(TRACK_SAMPLE_COUNT);
+    const points = trackPath.getPoints(TRACK_SAMPLE_COUNT);
 
     const treeData: { x: number; z: number; scale: number }[] = [];
     const step = 6;
@@ -408,7 +401,7 @@ export const TrackTrees = () => {
     canopyMesh.instanceMatrix.needsUpdate = true;
 
     return { trunkMesh, canopyMesh };
-  }, []);
+  }, [trackPath]);
 
   return (
     <group>
@@ -807,9 +800,9 @@ const createFacadeTexture = (
 
 // Buildings procedurally placed along track with safe-distance validation
 export const TrackBuildings = () => {
+  const { trackPath } = useTrackContext();
   const buildings = useMemo(() => {
-    const path = getTrackPath();
-    const points = path.getPoints(TRACK_SAMPLE_COUNT);
+    const points = trackPath.getPoints(TRACK_SAMPLE_COUNT);
 
     const colors = [
       "#d4c5a9",
@@ -899,7 +892,7 @@ export const TrackBuildings = () => {
     }
 
     return defs;
-  }, []);
+  }, [trackPath]);
 
   // Pre-generate facade textures (cached per unique combo)
   const facadeTextures = useMemo(() => {
@@ -1048,6 +1041,13 @@ export const TrackBuildings = () => {
 
 // Hotels — two luxury hotels placed safely away from track
 export const Hotels = () => {
+  const { configuration } = useTrackContext();
+  const hotelLandmarks = useMemo(
+    () =>
+      configuration.objectPositions.landmarks.filter((l) => l.type === "hotel"),
+    [configuration.objectPositions.landmarks],
+  );
+
   const hotelTexture = useMemo(() => {
     const canvas = document.createElement("canvas");
     canvas.width = 256;
@@ -1062,22 +1062,17 @@ export const Hotels = () => {
     return new THREE.CanvasTexture(canvas);
   }, []);
 
-  const hotels = [
-    {
-      pos: [-50, 0, 155] as const,
-      rot: 0.3,
-      name: "GRAND HOTEL",
-      color: "#e8dcc8",
-      accent: "#8b6914",
-    },
-    {
-      pos: [320, 0, 160] as const,
-      rot: -0.2,
-      name: "HOTEL MONACO",
-      color: "#d4c5a9",
-      accent: "#6b3a2a",
-    },
-  ];
+  const hotels = useMemo(
+    () =>
+      hotelLandmarks.map((landmark) => ({
+        pos: landmark.position,
+        rot: landmark.rotation ?? 0,
+        name: (landmark.properties?.name as string) ?? "HOTEL",
+        color: (landmark.properties?.color as string) ?? "#e8dcc8",
+        accent: (landmark.properties?.accent as string) ?? "#8b6914",
+      })),
+    [hotelLandmarks],
+  );
 
   return (
     <group>
@@ -1366,6 +1361,17 @@ export const Hotels = () => {
 
 // Notre-Dame style gothic cathedral — gray stone with stained glass
 export const Cathedral = () => {
+  const { configuration } = useTrackContext();
+  const cathedralLandmark = useMemo(
+    () =>
+      configuration.objectPositions.landmarks.find(
+        (l) => l.type === "cathedral",
+      ),
+    [configuration.objectPositions.landmarks],
+  );
+  const cathedralPosition = cathedralLandmark?.position ?? [-130, 0, -40];
+  const cathedralRotation = cathedralLandmark?.rotation ?? 0.5;
+
   const stone = "#8a8a88";
   const darkStone = "#6a6a68";
   const lightStone = "#a0a09e";
@@ -1501,7 +1507,7 @@ export const Cathedral = () => {
   }, []);
 
   return (
-    <group position={[-130, 0, -40]} rotation={[0, 0.5, 0]}>
+    <group position={cathedralPosition} rotation={[0, cathedralRotation, 0]}>
       {/* Main nave */}
       <mesh position={[0, 12, 0]} castShadow>
         <boxGeometry args={[18, 24, 40]} />
@@ -1754,8 +1760,19 @@ export const Cathedral = () => {
 
 // Equestrian statue (horse with rider)
 export const EquestrianStatue = () => {
+  const { configuration } = useTrackContext();
+  const statueLandmark = useMemo(
+    () =>
+      configuration.objectPositions.landmarks.find(
+        (l) => l.type === "equestrian-statue",
+      ),
+    [configuration.objectPositions.landmarks],
+  );
+  const statuePosition = statueLandmark?.position ?? [150, 0, -55];
+  const statueRotation = statueLandmark?.rotation ?? -0.8;
+
   return (
-    <group position={[150, 0, -55]} rotation={[0, -0.8, 0]}>
+    <group position={statuePosition} rotation={[0, statueRotation, 0]}>
       {/* Stone pedestal */}
       <mesh position={[0, 1.5, 0]}>
         <boxGeometry args={[5, 3, 3]} />
@@ -1846,12 +1863,21 @@ export const EquestrianStatue = () => {
 
 // European medieval castle in the distance
 export const Castle = () => {
+  const { configuration } = useTrackContext();
+  const castleLandmark = useMemo(
+    () =>
+      configuration.objectPositions.landmarks.find((l) => l.type === "castle"),
+    [configuration.objectPositions.landmarks],
+  );
+  const castlePosition = castleLandmark?.position ?? [420, 0, -300];
+  const castleRotation = castleLandmark?.rotation ?? 0.3;
+
   const stoneColor = "#f0ece4";
   const darkStone = "#d8d0c4";
   const roofColor = "#4a5a6a";
 
   return (
-    <group position={[420, 0, -300]} rotation={[0, 0.3, 0]}>
+    <group position={castlePosition} rotation={[0, castleRotation, 0]}>
       {/* Main keep (central tower) */}
       <mesh position={[0, 20, 0]} castShadow>
         <boxGeometry args={[20, 40, 20]} />
@@ -1971,17 +1997,29 @@ export const Castle = () => {
 
 // Luxury yachts floating on the ocean
 export const Yachts = () => {
+  const { configuration } = useTrackContext();
+  const yachtLandmark = useMemo(
+    () =>
+      configuration.objectPositions.landmarks.find(
+        (l) => l.type === "yacht-cluster",
+      ),
+    [configuration.objectPositions.landmarks],
+  );
   const yachtData = useMemo(() => {
-    // Place yachts in ocean areas far from the track/grass island
-    return [
-      { pos: [-180, -0.15, 280] as const, rot: 0.4, scale: 1.2 },
-      { pos: [-280, -0.15, 180] as const, rot: 1.8, scale: 1.0 },
-      { pos: [460, -0.15, 250] as const, rot: -0.6, scale: 1.4 },
-      { pos: [520, -0.15, 150] as const, rot: 2.2, scale: 0.9 },
-      { pos: [-350, -0.15, -250] as const, rot: 0.9, scale: 1.1 },
-      { pos: [500, -0.15, -250] as const, rot: -1.2, scale: 1.3 },
-    ];
-  }, []);
+    const yachts =
+      (yachtLandmark?.properties?.yachts as
+        | {
+            position: [number, number, number];
+            rotation: number;
+            scale: number;
+          }[]
+        | undefined) ?? [];
+    return yachts.map((y) => ({
+      pos: y.position,
+      rot: y.rotation,
+      scale: y.scale,
+    }));
+  }, [yachtLandmark]);
 
   return (
     <group>

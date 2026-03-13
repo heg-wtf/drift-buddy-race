@@ -14,126 +14,8 @@ import {
   TrackTrees,
   Yachts,
 } from "./TrackObjects";
-
-const TRACK_POINT_COUNT = 600;
-const MIN_SAFE_DISTANCE = 35; // Must be > track width (20) + margin
-
-// Istanbul Park Circuit — pre-scaled coordinates (no multiplier needed)
-// All parallel sections verified 40+ units apart
-const createIstanbulParkPoints = () => {
-  // Istanbul Park — remapped to match the provided reference silhouette
-  // Wide layout, long T1→T2 straight, pronounced left T8, broader T9–T12 top section
-  const pts: [number, number][] = [
-    // START/FINISH straight (heading down, +z = south)
-    [40, -20],
-    [40, 10],
-    [40, 40],
-
-    // T1 — gentle right
-    [58, 65],
-    [88, 80],
-
-    // Bottom straight going far right (z≈85–88)
-    [140, 86],
-    [210, 88],
-    [280, 86],
-    [340, 80],
-
-    // T2 — big hairpin at far right (U-turn, exit BELOW outbound)
-    [375, 75],
-    [398, 84],
-    [408, 100],
-    [398, 116],
-    [375, 124],
-
-    // Return left BELOW outbound (z≈126–128, 38+ units below outbound)
-    [340, 128],
-    [280, 130],
-    [210, 128],
-    [150, 124],
-
-    // T3 — continue left, staying well south of T1 (z≈118–108)
-    [100, 118],
-    [60, 108],
-
-    // T4 — curve up-left (stays south of start straight z=0–40)
-    [20, 92],
-    [-15, 70],
-
-    // T5 — heading up
-    [-40, 44],
-    [-55, 18],
-
-    // T6–T7 up the left side
-    [-68, -10],
-    [-80, -40],
-    [-90, -68],
-
-    // T8 — multi-apex left sweeper
-    [-102, -95],
-    [-118, -120],
-    [-112, -148],
-    [-92, -162],
-
-    // T9 — hairpin at top-left
-    [-62, -170],
-    [-35, -164],
-
-    // T10 heading right across top
-    [-8, -150],
-    [18, -140],
-
-    // T11 — kink
-    [42, -134],
-    [62, -130],
-
-    // T12 — sharp right heading down
-    [80, -126],
-    [86, -110],
-    [76, -92],
-
-    // T13 — smooth curve back to start
-    [62, -68],
-    [48, -45],
-  ];
-
-  return pts.map(([x, z]) => new THREE.Vector3(x, 0, z));
-};
-
-// Validate track: check no non-adjacent segments are closer than MIN_SAFE_DISTANCE
-const validateTrack = (curve: THREE.CatmullRomCurve3, samples: number) => {
-  const points = curve.getPoints(samples);
-  const minIndexGap = Math.floor(samples * 0.08); // ~8% of track apart = "non-adjacent"
-  let violations = 0;
-
-  for (let i = 0; i < points.length; i++) {
-    for (let j = i + minIndexGap; j < points.length; j++) {
-      // Skip points near the seam (start≈end for closed curve)
-      if (j > points.length - minIndexGap && i < minIndexGap) continue;
-
-      const dx = points[i].x - points[j].x;
-      const dz = points[i].z - points[j].z;
-      const dist = Math.sqrt(dx * dx + dz * dz);
-
-      if (dist < MIN_SAFE_DISTANCE) {
-        violations++;
-        if (violations <= 5) {
-          console.warn(
-            `⚠️ Track overlap risk: points ${i} & ${j} are ${dist.toFixed(1)} units apart (min: ${MIN_SAFE_DISTANCE})`,
-          );
-        }
-      }
-    }
-  }
-
-  if (violations === 0) {
-    console.log("✅ Track validation passed — no overlapping segments");
-  } else {
-    console.warn(
-      `⚠️ Track validation: ${violations} potential overlaps detected`,
-    );
-  }
-};
+import { useTrackContext } from "./tracks";
+import type { MountainData } from "./tracks";
 
 // Build a proper triangle-strip road mesh from center points
 const createRoadGeometry = (centerPoints: THREE.Vector3[], width: number) => {
@@ -203,25 +85,21 @@ const computeOffsetPoints = (centerPoints: THREE.Vector3[], offset: number) => {
   return result;
 };
 
-let _trackValidated = false;
-export const getTrackPath = () => {
-  const curve = new THREE.CatmullRomCurve3(
-    createIstanbulParkPoints(),
-    true,
-    "centripetal",
-  );
-  if (!_trackValidated) {
-    _trackValidated = true;
-    // Validation disabled for performance — enable to debug overlaps
-    // setTimeout(() => validateTrack(curve, TRACK_POINT_COUNT), 500);
-  }
-  return curve;
+// --- Parameterized track utility functions ---
+
+export const buildTrackPath = (
+  controlPoints: [number, number][],
+): THREE.CatmullRomCurve3 => {
+  const points = controlPoints.map(([x, z]) => new THREE.Vector3(x, 0, z));
+  return new THREE.CatmullRomCurve3(points, true, "centripetal");
 };
 
-export const getTrackBounds = (trackWidth: number = 10) => {
-  const curve = getTrackPath();
-  const points = curve.getPoints(TRACK_POINT_COUNT);
-
+export const buildTrackBounds = (
+  curve: THREE.CatmullRomCurve3,
+  trackWidth: number = 10,
+  sampleCount: number = 600,
+) => {
+  const points = curve.getPoints(sampleCount);
   const innerPoints: THREE.Vector3[] = [];
   const outerPoints: THREE.Vector3[] = [];
 
@@ -231,7 +109,6 @@ export const getTrackBounds = (trackWidth: number = 10) => {
       .subVectors(next, points[i])
       .normalize();
     const perp = new THREE.Vector3(-direction.z, 0, direction.x);
-
     innerPoints.push(points[i].clone().addScaledVector(perp, -trackWidth / 2));
     outerPoints.push(points[i].clone().addScaledVector(perp, trackWidth / 2));
   }
@@ -368,11 +245,70 @@ const CenterLineDashes = ({
   return <primitive object={mesh} />;
 };
 
+// Mountain renderer — driven by config data
+const Mountains = ({ mountains }: { mountains: MountainData[] }) => (
+  <>
+    {mountains.map((mountain, i) => (
+      <group key={`mountain-${i}`}>
+        <mesh
+          position={[
+            mountain.position[0],
+            mountain.height / 2 - 5,
+            mountain.position[2],
+          ]}
+        >
+          <coneGeometry args={[mountain.radius, mountain.height, 8]} />
+          <meshStandardMaterial color={mountain.color} roughness={0.95} />
+        </mesh>
+        <mesh
+          position={[
+            mountain.position[0],
+            mountain.height * 0.75,
+            mountain.position[2],
+          ]}
+        >
+          <coneGeometry
+            args={[mountain.radius * 0.3, mountain.height * 0.35, 8]}
+          />
+          <meshStandardMaterial color="#f0f0f0" roughness={0.7} />
+        </mesh>
+        <mesh
+          position={[
+            mountain.position[0] + mountain.radius * 0.6,
+            mountain.height * 0.3 - 5,
+            mountain.position[2] + mountain.radius * 0.3,
+          ]}
+        >
+          <coneGeometry
+            args={[mountain.radius * 0.5, mountain.height * 0.6, 7]}
+          />
+          <meshStandardMaterial color={mountain.color} roughness={0.95} />
+        </mesh>
+        <mesh
+          position={[
+            mountain.position[0] + mountain.radius * 0.6,
+            mountain.height * 0.55,
+            mountain.position[2] + mountain.radius * 0.3,
+          ]}
+        >
+          <coneGeometry
+            args={[mountain.radius * 0.15, mountain.height * 0.18, 7]}
+          />
+          <meshStandardMaterial color="#e8e8e8" roughness={0.7} />
+        </mesh>
+      </group>
+    ))}
+  </>
+);
+
 interface TrackProps {
   width?: number;
 }
 
 export const Track = ({ width = 10 }: TrackProps) => {
+  const { configuration, trackPath } = useTrackContext();
+  const { environment } = configuration;
+
   const {
     roadGeometry,
     startLinePos,
@@ -381,8 +317,9 @@ export const Track = ({ width = 10 }: TrackProps) => {
     leftBarrier,
     rightBarrier,
   } = useMemo(() => {
-    const path = getTrackPath();
-    const points = path.getPoints(TRACK_POINT_COUNT);
+    const points = trackPath.getPoints(
+      configuration.definition.samplePointCount,
+    );
     const roadGeometry = createRoadGeometry(points, width);
 
     const startPos = points[0].clone();
@@ -403,44 +340,36 @@ export const Track = ({ width = 10 }: TrackProps) => {
       leftBarrier,
       rightBarrier,
     };
-  }, [width]);
+  }, [width, trackPath, configuration.definition.samplePointCount]);
 
   return (
     <group>
-      {/* Ocean — deep layer */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[140, -0.35, 0]}>
-        <planeGeometry args={[4000, 4000]} />
-        <meshStandardMaterial color="#0e2b48" metalness={0.2} roughness={0.3} />
-      </mesh>
-      {/* Ocean — mid layer */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[140, -0.3, 0]}>
-        <planeGeometry args={[2000, 2000]} />
-        <meshStandardMaterial
-          color="#005286"
-          metalness={0.3}
-          roughness={0.25}
-        />
-      </mesh>
-      {/* Ocean — shallow/coastal layer */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[140, -0.25, 0]}>
-        <planeGeometry args={[1000, 1000]} />
-        <meshStandardMaterial
-          color="#65b9e3"
-          transparent
-          opacity={0.7}
-          metalness={0.4}
-          roughness={0.15}
-        />
-      </mesh>
+      {/* Ocean layers — from config */}
+      {environment.oceanLayers.map((layer, i) => (
+        <mesh
+          key={`ocean-${i}`}
+          rotation={[-Math.PI / 2, 0, 0]}
+          position={layer.position}
+        >
+          <planeGeometry args={layer.dimensions} />
+          <meshStandardMaterial
+            color={layer.color}
+            transparent={layer.opacity !== undefined}
+            opacity={layer.opacity ?? 1}
+            metalness={layer.metalness ?? 0.2}
+            roughness={layer.roughness ?? 0.3}
+          />
+        </mesh>
+      ))}
 
-      {/* Grass island (track area only) */}
+      {/* Grass island — from config */}
       <mesh
         rotation={[-Math.PI / 2, 0, 0]}
-        position={[140, -0.05, -20]}
+        position={environment.grassIsland.position}
         receiveShadow
       >
-        <planeGeometry args={[700, 450]} />
-        <meshStandardMaterial color="#2d5a27" />
+        <planeGeometry args={environment.grassIsland.dimensions} />
+        <meshStandardMaterial color={environment.grassIsland.color} />
       </mesh>
 
       {/* Road surface */}
@@ -456,7 +385,7 @@ export const Track = ({ width = 10 }: TrackProps) => {
       {/* Center line dashes */}
       <CenterLineDashes centerPoints={centerPoints} />
 
-      {/* Barrier walls — instanced boxes, no twisting */}
+      {/* Barrier walls */}
       <BarrierWall points={leftBarrier} color="#e6b800" />
       <BarrierWall points={rightBarrier} color="#e6b800" />
 
@@ -469,104 +398,22 @@ export const Track = ({ width = 10 }: TrackProps) => {
         <meshStandardMaterial color="#f8fafc" side={THREE.DoubleSide} />
       </mesh>
 
-      {/* Distant mountains */}
-      {[
-        { pos: [-350, 0, -400], height: 120, radius: 100, color: "#5a6e4a" },
-        { pos: [-200, 0, -450], height: 180, radius: 130, color: "#4d6040" },
-        { pos: [-50, 0, -500], height: 150, radius: 110, color: "#556b47" },
-        { pos: [200, 0, -480], height: 200, radius: 150, color: "#4a5e3d" },
-        { pos: [400, 0, -420], height: 140, radius: 120, color: "#5f7350" },
-        { pos: [550, 0, -380], height: 170, radius: 140, color: "#4d6040" },
-        { pos: [-400, 0, 350], height: 100, radius: 90, color: "#5a6e4a" },
-        { pos: [-300, 0, 450], height: 160, radius: 120, color: "#556b47" },
-        { pos: [500, 0, 400], height: 130, radius: 110, color: "#4a5e3d" },
-        { pos: [600, 0, 300], height: 190, radius: 140, color: "#5f7350" },
-      ].map((mountain, i) => (
-        <group key={`mountain-${i}`}>
-          {/* Mountain body */}
-          <mesh
-            position={[
-              mountain.pos[0],
-              mountain.height / 2 - 5,
-              mountain.pos[2],
-            ]}
-          >
-            <coneGeometry args={[mountain.radius, mountain.height, 8]} />
-            <meshStandardMaterial color={mountain.color} roughness={0.95} />
-          </mesh>
-          {/* Snow cap */}
-          <mesh
-            position={[
-              mountain.pos[0],
-              mountain.height * 0.75,
-              mountain.pos[2],
-            ]}
-          >
-            <coneGeometry
-              args={[mountain.radius * 0.3, mountain.height * 0.35, 8]}
-            />
-            <meshStandardMaterial color="#f0f0f0" roughness={0.7} />
-          </mesh>
-          {/* Secondary peak */}
-          <mesh
-            position={[
-              mountain.pos[0] + mountain.radius * 0.6,
-              mountain.height * 0.3 - 5,
-              mountain.pos[2] + mountain.radius * 0.3,
-            ]}
-          >
-            <coneGeometry
-              args={[mountain.radius * 0.5, mountain.height * 0.6, 7]}
-            />
-            <meshStandardMaterial color={mountain.color} roughness={0.95} />
-          </mesh>
-          {/* Snow cap on secondary peak */}
-          <mesh
-            position={[
-              mountain.pos[0] + mountain.radius * 0.6,
-              mountain.height * 0.55,
-              mountain.pos[2] + mountain.radius * 0.3,
-            ]}
-          >
-            <coneGeometry
-              args={[mountain.radius * 0.15, mountain.height * 0.18, 7]}
-            />
-            <meshStandardMaterial color="#e8e8e8" roughness={0.7} />
-          </mesh>
-        </group>
-      ))}
+      {/* Mountains — from config */}
+      <Mountains mountains={environment.mountains} />
 
-      {/* Grandstand at start line (outside track) */}
+      {/* Grandstand at start line */}
       <StartGrandstand />
 
-      {/* Qatar Airways ground ad boards */}
+      {/* Track objects */}
       <TrackAdBoards />
-
-      {/* DHL billboards */}
       <TrackBillboards />
-
-      {/* AWS billboards */}
       <TrackBillboardsAWS />
-
-      {/* Trees along the track */}
       <TrackTrees />
-
-      {/* Buildings around the track */}
       <TrackBuildings />
-
-      {/* Hotels */}
       <Hotels />
-
-      {/* Notre-Dame Cathedral */}
       <Cathedral />
-
-      {/* Equestrian statue */}
       <EquestrianStatue />
-
-      {/* European castle in the distance */}
       <Castle />
-
-      {/* Luxury yachts on the ocean */}
       <Yachts />
     </group>
   );

@@ -1,32 +1,61 @@
-import * as THREE from 'three';
-import { useMemo } from 'react';
+import * as THREE from "three";
+import { useMemo } from "react";
+import { useTrackContext } from "./tracks";
 
-const SPECTATOR_COLORS = [
-  '#e63946', '#457b9d', '#f4a261', '#2a9d8f', '#e9c46a', '#264653',
-  '#ff6b6b', '#6c5ce7', '#fd79a8', '#00b894', '#0984e3', '#fdcb6e',
-  '#e17055', '#74b9ff', '#a29bfe', '#55efc4',
+export const SPECTATOR_COLORS = [
+  "#e63946",
+  "#457b9d",
+  "#f4a261",
+  "#2a9d8f",
+  "#e9c46a",
+  "#264653",
+  "#ff6b6b",
+  "#6c5ce7",
+  "#fd79a8",
+  "#00b894",
+  "#0984e3",
+  "#fdcb6e",
+  "#e17055",
+  "#74b9ff",
+  "#a29bfe",
+  "#55efc4",
 ];
-const SKIN_TONES = ['#deb887', '#d2a679', '#c49a6c', '#f5d0a9', '#a0785a', '#8d5524'];
+export const SKIN_TONES = [
+  "#deb887",
+  "#d2a679",
+  "#c49a6c",
+  "#f5d0a9",
+  "#a0785a",
+  "#8d5524",
+];
 
 // Grandstand at the start/finish line, OUTSIDE the track (right barrier side)
 // Track center at x=40, right barrier at x≈50.3, so grandstand starts at x=56
 export const StartGrandstand = () => {
+  const { configuration } = useTrackContext();
+  const { startGrandstand } = configuration.objectPositions;
+
   const meshes = useMemo(() => {
-    const rows = 6;
-    const seatsPerRow = 22;
+    const { rows, seatsPerRow, startX, startZ, facingRotation } =
+      startGrandstand;
     const seatWidth = 1.6;
     const rowDepth = 1.8;
     const rowHeightStep = 1.1;
-    const startX = 56; // outside right barrier (barrier at ~50.3)
-    const startZ = -17;
     const total = rows * seatsPerRow;
 
     const dummy = new THREE.Object3D();
     const color = new THREE.Color();
 
     // Seats
-    const seatGeo = new THREE.BoxGeometry(rowDepth * 0.85, 0.25, seatWidth * 0.85);
-    const seatMat = new THREE.MeshStandardMaterial({ color: '#555555', roughness: 0.8 });
+    const seatGeo = new THREE.BoxGeometry(
+      rowDepth * 0.85,
+      0.25,
+      seatWidth * 0.85,
+    );
+    const seatMat = new THREE.MeshStandardMaterial({
+      color: "#555555",
+      roughness: 0.8,
+    });
     const seatMesh = new THREE.InstancedMesh(seatGeo, seatMat, total);
 
     // Bodies
@@ -58,11 +87,13 @@ export const StartGrandstand = () => {
         const px = x + (Math.random() - 0.5) * 0.3;
         const pz = z + (Math.random() - 0.5) * 0.3;
         dummy.position.set(px, y + 0.6, pz);
-        dummy.rotation.set(0, -Math.PI / 2 + (Math.random() - 0.5) * 0.4, 0);
+        dummy.rotation.set(0, facingRotation + (Math.random() - 0.5) * 0.4, 0);
         dummy.scale.set(1, hScale, 1);
         dummy.updateMatrix();
         bodyMesh.setMatrixAt(idx, dummy.matrix);
-        color.set(SPECTATOR_COLORS[Math.floor(Math.random() * SPECTATOR_COLORS.length)]);
+        color.set(
+          SPECTATOR_COLORS[Math.floor(Math.random() * SPECTATOR_COLORS.length)],
+        );
         bodyMesh.setColorAt(idx, color);
 
         // Head
@@ -88,10 +119,33 @@ export const StartGrandstand = () => {
     const roofD = seatsPerRow * seatWidth + 2;
     const roofY = rows * rowHeightStep + 1.5;
 
-    return { seatMesh, bodyMesh, headMesh, roofW, roofD, roofY, startX, startZ, rows, seatsPerRow, rowDepth, seatWidth };
-  }, []);
+    return {
+      seatMesh,
+      bodyMesh,
+      headMesh,
+      roofW,
+      roofD,
+      roofY,
+      startX,
+      startZ,
+      rows,
+      seatsPerRow,
+      rowDepth,
+      seatWidth,
+    };
+  }, [startGrandstand]);
 
-  const { roofW, roofD, roofY, startX, startZ, rows, seatsPerRow, rowDepth, seatWidth } = meshes;
+  const {
+    roofW,
+    roofD,
+    roofY,
+    startX,
+    startZ,
+    rows,
+    seatsPerRow,
+    rowDepth,
+    seatWidth,
+  } = meshes;
   const roofX = startX + (rows * rowDepth) / 2;
   const roofZ = startZ + (seatsPerRow * seatWidth) / 2 - seatWidth / 2;
 
@@ -106,8 +160,15 @@ export const StartGrandstand = () => {
         <meshStandardMaterial color="#2d3748" metalness={0.5} roughness={0.4} />
       </mesh>
       {/* 4 pillars */}
-      {[[startX, startZ], [startX, startZ + (seatsPerRow - 1) * seatWidth],
-        [startX + (rows - 1) * rowDepth, startZ], [startX + (rows - 1) * rowDepth, startZ + (seatsPerRow - 1) * seatWidth]].map(([px, pz], i) => (
+      {[
+        [startX, startZ],
+        [startX, startZ + (seatsPerRow - 1) * seatWidth],
+        [startX + (rows - 1) * rowDepth, startZ],
+        [
+          startX + (rows - 1) * rowDepth,
+          startZ + (seatsPerRow - 1) * seatWidth,
+        ],
+      ].map(([px, pz], i) => (
         <mesh key={i} position={[px, roofY / 2, pz]}>
           <cylinderGeometry args={[0.1, 0.1, roofY, 6]} />
           <meshStandardMaterial color="#444444" metalness={0.3} />

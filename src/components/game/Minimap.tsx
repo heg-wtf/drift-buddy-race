@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import * as THREE from "three";
-import { getTrackPath, getTrackBounds } from "./Track";
+import { useTrackContext } from "./tracks";
 
 interface MinimapProps {
   carPositions: Map<string, THREE.Vector3>;
@@ -18,10 +18,11 @@ export const Minimap = ({
   const mapSize = 180;
   const mapPadding = 12;
 
+  const { trackPath, trackBounds } = useTrackContext();
+
   const { trackPoints, bounds, scale, offsetX, offsetY } = useMemo(() => {
-    const curve = getTrackPath();
-    const points = curve.getPoints(200);
-    const { innerPoints, outerPoints } = getTrackBounds(trackWidth);
+    const points = trackPath.getPoints(200);
+    const { innerPoints, outerPoints } = trackBounds;
 
     let minX = Infinity;
     let maxX = -Infinity;
@@ -53,7 +54,7 @@ export const Minimap = ({
       offsetX: centeredOffsetX,
       offsetY: centeredOffsetY,
     };
-  }, [trackWidth]);
+  }, [trackPath, trackBounds]);
 
   const worldToMap = (x: number, z: number) => {
     return {
