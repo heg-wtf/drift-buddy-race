@@ -250,10 +250,17 @@ const CenterLineDashes = ({
 };
 
 // Mountain renderer — driven by config data
-const Mountains = ({ mountains }: { mountains: MountainData[] }) => (
+const Mountains = ({
+  mountains,
+  trackIdentifier,
+}: {
+  mountains: MountainData[];
+  trackIdentifier: string;
+}) => (
   <>
     {mountains.map((mountain, i) => {
-      const isFuji = mountain.height >= 120;
+      const isFuji =
+        trackIdentifier === "tokyo-city-circuit" && mountain.height >= 120;
       const mx = mountain.position[0];
       const mz = mountain.position[2];
 
@@ -451,29 +458,21 @@ const TrackLights = ({
               roughness={0.4}
             />
           </mesh>
-          {/* Lamp head */}
+          {/* Lamp head — emissive glow only, no pointLight for performance */}
           <mesh
             position={[light.position.x, LIGHT_POLE_HEIGHT, light.position.z]}
           >
-            <boxGeometry args={[0.8, 0.3, 0.5]} />
-            <meshStandardMaterial
-              color="#ffffff"
-              emissive="#ffeedd"
-              emissiveIntensity={0.8}
-            />
+            <boxGeometry args={[1.0, 0.4, 0.6]} />
+            <meshBasicMaterial color="#ffeedd" />
           </mesh>
-          {/* Point light */}
-          <pointLight
-            position={[
-              light.position.x,
-              LIGHT_POLE_HEIGHT - 0.5,
-              light.position.z,
-            ]}
-            color="#ffeedd"
-            intensity={50}
-            distance={50}
-            decay={1.5}
-          />
+          {/* Light cone visual (fake light pool on ground) */}
+          <mesh
+            position={[light.position.x, 0.05, light.position.z]}
+            rotation={[-Math.PI / 2, 0, 0]}
+          >
+            <circleGeometry args={[6, 12]} />
+            <meshBasicMaterial color="#ffeedd" transparent opacity={0.08} />
+          </mesh>
         </group>
       ))}
     </group>
@@ -589,7 +588,10 @@ export const Track = ({ width = 10 }: TrackProps) => {
       <TrackLights centerPoints={centerPoints} width={width} />
 
       {/* Mountains — from config */}
-      <Mountains mountains={environment.mountains} />
+      <Mountains
+        mountains={environment.mountains}
+        trackIdentifier={configuration.definition.identifier}
+      />
 
       {/* Grandstand at start line */}
       <StartGrandstand />
