@@ -2,9 +2,6 @@ import * as THREE from "three";
 import { useMemo } from "react";
 import { useTrackContext } from "./tracks";
 
-const TRACK_HALF_WIDTH = 10;
-const TRACK_SAMPLE_COUNT = 600;
-
 // Deterministic pseudo-random from seed
 const seededRandom = (seed: number) => {
   const x = Math.sin(seed * 127.1 + seed * 311.7) * 43758.5453;
@@ -17,8 +14,9 @@ const isPositionSafe = (
   z: number,
   radius: number,
   trackPoints: THREE.Vector3[],
+  trackHalfWidth: number,
 ): boolean => {
-  const minDistSquared = (TRACK_HALF_WIDTH + radius + 3) ** 2;
+  const minDistSquared = (trackHalfWidth + radius + 3) ** 2;
   for (let i = 0; i < trackPoints.length; i += 3) {
     const dx = x - trackPoints[i].x;
     const dz = z - trackPoints[i].z;
@@ -35,8 +33,9 @@ const isSafeFromDistantTrack = (
   trackPoints: THREE.Vector3[],
   sourceIndex: number,
   skipRange: number,
+  trackHalfWidth: number,
 ): boolean => {
-  const minDistSquared = (TRACK_HALF_WIDTH + radius + 3) ** 2;
+  const minDistSquared = (trackHalfWidth + radius + 3) ** 2;
   for (let i = 0; i < trackPoints.length; i += 3) {
     const indexDistance = Math.min(
       Math.abs(i - sourceIndex),
@@ -142,8 +141,10 @@ export const Cameramen = () => {
 export const TrackBillboards = () => {
   const { trackPath, configuration } = useTrackContext();
   const billboardStep = configuration.objectPositions.billboardStep;
+  const trackHalfWidth = configuration.definition.trackWidth / 2;
+  const samplePointCount = configuration.definition.samplePointCount;
   const meshes = useMemo(() => {
-    const points = trackPath.getPoints(TRACK_SAMPLE_COUNT);
+    const points = trackPath.getPoints(samplePointCount);
 
     const billboardData: { x: number; z: number; rotationY: number }[] = [];
     const step = billboardStep;
@@ -158,10 +159,12 @@ export const TrackBillboards = () => {
 
       // Alternate sides
       const side = seededRandom(i * 77) > 0.5 ? 1 : -1;
-      const offset = TRACK_HALF_WIDTH + 2.5; // just outside barrier
+      const offset = trackHalfWidth + 2.5; // just outside barrier
       const pos = current.clone().addScaledVector(perp, offset * side);
 
-      if (isSafeFromDistantTrack(pos.x, pos.z, 1, points, i, 60)) {
+      if (
+        isSafeFromDistantTrack(pos.x, pos.z, 1, points, i, 60, trackHalfWidth)
+      ) {
         billboardData.push({ x: pos.x, z: pos.z, rotationY });
       }
     }
@@ -213,7 +216,7 @@ export const TrackBillboards = () => {
     boardMesh.instanceMatrix.needsUpdate = true;
 
     return { boardMesh };
-  }, [trackPath, billboardStep]);
+  }, [trackPath, billboardStep, trackHalfWidth, samplePointCount]);
 
   return (
     <group>
@@ -227,12 +230,14 @@ export const TrackBillboardsAWS = () => {
   const { trackPath, configuration } = useTrackContext();
   const awsBillboardTrackFractions =
     configuration.objectPositions.awsBillboardTrackFractions;
+  const trackHalfWidth = configuration.definition.trackWidth / 2;
+  const samplePointCount = configuration.definition.samplePointCount;
   const meshes = useMemo(() => {
-    const points = trackPath.getPoints(TRACK_SAMPLE_COUNT);
+    const points = trackPath.getPoints(samplePointCount);
 
     // Compute target indices from track fractions
     const targetIndices = awsBillboardTrackFractions.map((fraction) =>
-      Math.round(fraction * TRACK_SAMPLE_COUNT),
+      Math.round(fraction * samplePointCount),
     );
     const billboardData: { x: number; z: number; rotationY: number }[] = [];
 
@@ -246,10 +251,12 @@ export const TrackBillboardsAWS = () => {
       const rotationY = Math.atan2(tangent.x, tangent.z);
 
       const side = seededRandom(idx * 33) > 0.5 ? 1 : -1;
-      const offset = TRACK_HALF_WIDTH + 2.5;
+      const offset = trackHalfWidth + 2.5;
       const pos = current.clone().addScaledVector(perp, offset * side);
 
-      if (isSafeFromDistantTrack(pos.x, pos.z, 1, points, idx, 60)) {
+      if (
+        isSafeFromDistantTrack(pos.x, pos.z, 1, points, idx, 60, trackHalfWidth)
+      ) {
         billboardData.push({ x: pos.x, z: pos.z, rotationY });
       }
     }
@@ -295,7 +302,7 @@ export const TrackBillboardsAWS = () => {
 
     boardMesh.instanceMatrix.needsUpdate = true;
     return { boardMesh };
-  }, [trackPath, awsBillboardTrackFractions]);
+  }, [trackPath, awsBillboardTrackFractions, trackHalfWidth, samplePointCount]);
 
   return (
     <group>
@@ -335,9 +342,12 @@ export const TrackAdBoards = () => {
 
 // Trees placed along track — InstancedMesh for performance (only 2 draw calls)
 export const TrackTrees = () => {
-  const { trackPath } = useTrackContext();
+  const { trackPath, configuration } = useTrackContext();
+  const trackHalfWidth = configuration.definition.trackWidth / 2;
+  const samplePointCount = configuration.definition.samplePointCount;
+  const startPoint = configuration.definition.controlPoints[0];
   const meshes = useMemo(() => {
-    const points = trackPath.getPoints(TRACK_SAMPLE_COUNT);
+    const points = trackPath.getPoints(samplePointCount);
 
     const treeData: { x: number; z: number; scale: number }[] = [];
     const step = 6;
@@ -351,14 +361,17 @@ export const TrackTrees = () => {
 
       for (const side of [1, -1] as const) {
         const rand = seededRandom(i * 100 + (side > 0 ? 0 : 50));
-        const offset = TRACK_HALF_WIDTH + 4 + rand * 5;
+        const offset = trackHalfWidth + 4 + rand * 5;
         const pos = current.clone().addScaledVector(perp, offset * side);
 
-        // Skip trees near start/finish area [40, -20]
+        // Skip trees near start/finish area
         const distanceToStart = Math.sqrt(
-          (pos.x - 40) ** 2 + (pos.z + 20) ** 2,
+          (pos.x - startPoint[0]) ** 2 + (pos.z - startPoint[1]) ** 2,
         );
-        if (distanceToStart > 40 && isPositionSafe(pos.x, pos.z, 2, points)) {
+        if (
+          distanceToStart > 40 &&
+          isPositionSafe(pos.x, pos.z, 2, points, trackHalfWidth)
+        ) {
           treeData.push({
             x: pos.x,
             z: pos.z,
@@ -401,7 +414,7 @@ export const TrackTrees = () => {
     canopyMesh.instanceMatrix.needsUpdate = true;
 
     return { trunkMesh, canopyMesh };
-  }, [trackPath]);
+  }, [trackPath, trackHalfWidth, samplePointCount, startPoint]);
 
   return (
     <group>
@@ -800,33 +813,47 @@ const createFacadeTexture = (
 
 // Buildings procedurally placed along track with safe-distance validation
 export const TrackBuildings = () => {
-  const { trackPath } = useTrackContext();
+  const { trackPath, configuration } = useTrackContext();
+  const trackHalfWidth = configuration.definition.trackWidth / 2;
+  const samplePointCount = configuration.definition.samplePointCount;
+  const isJapanese =
+    configuration.definition.identifier === "tokyo-city-circuit";
   const buildings = useMemo(() => {
-    const points = trackPath.getPoints(TRACK_SAMPLE_COUNT);
+    const points = trackPath.getPoints(samplePointCount);
 
-    const colors = [
-      "#d4c5a9",
-      "#c9b896",
-      "#bfae8c",
-      "#d1c4a5",
-      "#c4b698",
-      "#b8a988",
-      "#c2b393",
-      "#ccbda0",
-      "#a89880",
-      "#b5a58d",
-      "#e8dcc8",
-      "#c7c0b0",
-      "#ddd5c5",
-    ];
-    const roofTypes: ("flat" | "pointed" | "antenna" | "ac_unit")[] = [
-      "flat",
-      "pointed",
-      "antenna",
-      "flat",
-      "flat",
-      "ac_unit",
-    ];
+    const isJapaneseTrack = isJapanese;
+    const colors = isJapaneseTrack
+      ? [
+          "#8b1a1a", // 朱赤 (shrine red)
+          "#2a1a0a", // 焦げ茶 (dark wood)
+          "#1a1a18", // 墨色 (sumi black)
+          "#6b3a2a", // 栗色 (chestnut)
+          "#e8d8c0", // 白壁 (white plaster)
+          "#3a2a1a", // 濃茶 (dark brown)
+          "#c8a060", // 金茶 (golden brown)
+          "#4a3020", // 古木 (aged wood)
+          "#7a2020", // 弁柄 (bengara red)
+          "#f0e8d0", // 漆喰 (stucco)
+        ]
+      : [
+          "#d4c5a9",
+          "#c9b896",
+          "#bfae8c",
+          "#d1c4a5",
+          "#c4b698",
+          "#b8a988",
+          "#c2b393",
+          "#ccbda0",
+          "#a89880",
+          "#b5a58d",
+          "#e8dcc8",
+          "#c7c0b0",
+          "#ddd5c5",
+        ];
+    const roofTypes: ("flat" | "pointed" | "antenna" | "ac_unit")[] =
+      isJapaneseTrack
+        ? ["pointed", "pointed", "pointed", "flat", "pointed", "pointed"]
+        : ["flat", "pointed", "antenna", "flat", "flat", "ac_unit"];
 
     type BuildingDefinition = {
       pos: [number, number];
@@ -867,10 +894,12 @@ export const TrackBuildings = () => {
         const windowColumns = Math.max(2, Math.floor(w / 2.5));
         const style = Math.floor(seededRandom(i * 60 + side) * 6);
 
-        const offset = TRACK_HALF_WIDTH + halfDiagonal + 6 + r1 * 4;
+        const offset = trackHalfWidth + halfDiagonal + 6 + r1 * 4;
         const pos = current.clone().addScaledVector(perp, offset * side);
 
-        if (isPositionSafe(pos.x, pos.z, halfDiagonal, points)) {
+        if (
+          isPositionSafe(pos.x, pos.z, halfDiagonal, points, trackHalfWidth)
+        ) {
           defs.push({
             pos: [pos.x, pos.z],
             rotation: buildingRotation + (side > 0 ? 0 : Math.PI),
@@ -892,7 +921,7 @@ export const TrackBuildings = () => {
     }
 
     return defs;
-  }, [trackPath]);
+  }, [trackPath, trackHalfWidth, samplePointCount]);
 
   // Pre-generate facade textures (cached per unique combo)
   const facadeTextures = useMemo(() => {
@@ -947,6 +976,9 @@ export const TrackBuildings = () => {
               <planeGeometry args={[b.w, b.h]} />
               <meshStandardMaterial
                 map={textures.front}
+                emissiveMap={textures.front}
+                emissive="#ffcc66"
+                emissiveIntensity={0.4}
                 side={THREE.DoubleSide}
               />
             </mesh>
@@ -959,6 +991,9 @@ export const TrackBuildings = () => {
               <planeGeometry args={[b.w, b.h]} />
               <meshStandardMaterial
                 map={textures.front}
+                emissiveMap={textures.front}
+                emissive="#ffcc66"
+                emissiveIntensity={0.4}
                 side={THREE.DoubleSide}
               />
             </mesh>
@@ -971,6 +1006,9 @@ export const TrackBuildings = () => {
               <planeGeometry args={[b.d, b.h]} />
               <meshStandardMaterial
                 map={textures.side}
+                emissiveMap={textures.side}
+                emissive="#ffcc66"
+                emissiveIntensity={0.4}
                 side={THREE.DoubleSide}
               />
             </mesh>
@@ -983,6 +1021,9 @@ export const TrackBuildings = () => {
               <planeGeometry args={[b.d, b.h]} />
               <meshStandardMaterial
                 map={textures.side}
+                emissiveMap={textures.side}
+                emissive="#ffcc66"
+                emissiveIntensity={0.4}
                 side={THREE.DoubleSide}
               />
             </mesh>
@@ -994,11 +1035,43 @@ export const TrackBuildings = () => {
             </mesh>
 
             {/* Roof details */}
-            {b.roofType === "pointed" && (
+            {b.roofType === "pointed" && !isJapanese && (
               <mesh position={[x, b.h + 0.3 + b.w * 0.2, z]} castShadow>
                 <coneGeometry args={[Math.min(b.w, b.d) * 0.6, b.w * 0.4, 4]} />
                 <meshStandardMaterial color="#8b4513" roughness={0.9} />
               </mesh>
+            )}
+            {b.roofType === "pointed" && isJapanese && (
+              <group>
+                {/* 入母屋 (irimoya) shrine roof — wide overhang */}
+                <mesh position={[x, b.h + 0.15, z]} castShadow>
+                  <boxGeometry args={[b.w * 1.3, 0.3, b.d * 1.3]} />
+                  <meshStandardMaterial
+                    color="#1a1a18"
+                    roughness={0.8}
+                    metalness={0.2}
+                  />
+                </mesh>
+                <mesh position={[x, b.h + 0.6 + b.w * 0.15, z]} castShadow>
+                  <coneGeometry
+                    args={[Math.min(b.w, b.d) * 0.7, b.w * 0.3, 4]}
+                  />
+                  <meshStandardMaterial
+                    color="#1a1a18"
+                    roughness={0.8}
+                    metalness={0.2}
+                  />
+                </mesh>
+                {/* 鬼瓦 (onigawara) ridge ornament */}
+                <mesh position={[x, b.h + 0.8 + b.w * 0.15, z]}>
+                  <sphereGeometry args={[0.4, 6, 6]} />
+                  <meshStandardMaterial
+                    color="#c8a060"
+                    metalness={0.4}
+                    roughness={0.5}
+                  />
+                </mesh>
+              </group>
             )}
 
             {b.roofType === "antenna" && (
@@ -1032,6 +1105,308 @@ export const TrackBuildings = () => {
                 />
               </mesh>
             )}
+          </group>
+        );
+      })}
+    </group>
+  );
+};
+
+// Tokyo Tower — iconic red/white lattice tower
+export const TokyoTower = () => {
+  const { configuration } = useTrackContext();
+  const towerLandmark = useMemo(
+    () =>
+      configuration.objectPositions.landmarks.find(
+        (l) => l.type === "tokyo-tower",
+      ),
+    [configuration.objectPositions.landmarks],
+  );
+
+  if (!towerLandmark) return null;
+
+  const pos = towerLandmark.position;
+  const rot = towerLandmark.rotation ?? 0;
+  const towerHeight = 80;
+  const red = "#cc3333";
+  const white = "#f0f0f0";
+
+  return (
+    <group position={[pos[0], 0, pos[2]]} rotation={[0, rot, 0]}>
+      {/* Four legs tapering inward */}
+      {[
+        [-1, -1],
+        [1, -1],
+        [-1, 1],
+        [1, 1],
+      ].map(([lx, lz], i) => (
+        <mesh
+          key={`leg-${i}`}
+          position={[lx * 5, towerHeight * 0.22, lz * 5]}
+          rotation={[lz * 0.18, 0, -lx * 0.18]}
+        >
+          <cylinderGeometry args={[0.5, 1.2, towerHeight * 0.45, 8]} />
+          <meshStandardMaterial color={red} metalness={0.4} roughness={0.5} />
+        </mesh>
+      ))}
+
+      {/* Main body — lower section (red) */}
+      <mesh position={[0, towerHeight * 0.35, 0]}>
+        <cylinderGeometry args={[2.5, 6, towerHeight * 0.25, 8]} />
+        <meshStandardMaterial color={red} metalness={0.4} roughness={0.5} />
+      </mesh>
+
+      {/* Lower observation deck */}
+      <mesh position={[0, towerHeight * 0.45, 0]}>
+        <boxGeometry args={[9, 1.5, 9]} />
+        <meshStandardMaterial color={white} metalness={0.3} roughness={0.4} />
+      </mesh>
+
+      {/* Observation deck windows */}
+      {[0, Math.PI / 2, Math.PI, Math.PI * 1.5].map((angle, i) => (
+        <mesh
+          key={`obs-win-${i}`}
+          position={[
+            Math.sin(angle) * 4.55,
+            towerHeight * 0.45,
+            Math.cos(angle) * 4.55,
+          ]}
+          rotation={[0, angle, 0]}
+        >
+          <planeGeometry args={[7, 1.2]} />
+          <meshStandardMaterial
+            color="#88ccff"
+            emissive="#ffd060"
+            emissiveIntensity={0.5}
+            side={THREE.DoubleSide}
+          />
+        </mesh>
+      ))}
+
+      {/* Mid section (red/white stripes) */}
+      {Array.from({ length: 6 }).map((_, i) => (
+        <mesh key={`mid-${i}`} position={[0, towerHeight * 0.48 + i * 3, 0]}>
+          <cylinderGeometry args={[2.2 - i * 0.15, 2.5 - i * 0.15, 2.8, 8]} />
+          <meshStandardMaterial
+            color={i % 2 === 0 ? red : white}
+            metalness={0.4}
+            roughness={0.5}
+          />
+        </mesh>
+      ))}
+
+      {/* Upper observation deck */}
+      <mesh position={[0, towerHeight * 0.72, 0]}>
+        <boxGeometry args={[5, 1.2, 5]} />
+        <meshStandardMaterial color={white} metalness={0.3} roughness={0.4} />
+      </mesh>
+
+      {/* Upper section (red) */}
+      <mesh position={[0, towerHeight * 0.82, 0]}>
+        <cylinderGeometry args={[0.8, 1.5, towerHeight * 0.18, 8]} />
+        <meshStandardMaterial color={red} metalness={0.4} roughness={0.5} />
+      </mesh>
+
+      {/* Antenna spire */}
+      <mesh position={[0, towerHeight * 0.96, 0]}>
+        <cylinderGeometry args={[0.15, 0.4, towerHeight * 0.1, 6]} />
+        <meshStandardMaterial color={white} metalness={0.5} roughness={0.3} />
+      </mesh>
+
+      {/* Antenna tip */}
+      <mesh position={[0, towerHeight * 1.02, 0]}>
+        <coneGeometry args={[0.1, 2, 6]} />
+        <meshStandardMaterial color={red} metalness={0.5} roughness={0.3} />
+      </mesh>
+
+      {/* Cross beams (lattice effect) */}
+      {Array.from({ length: 8 }).map((_, i) => {
+        const y = 5 + i * 4;
+        const spread = 5 - (y / towerHeight) * 3.5;
+        return (
+          <mesh
+            key={`beam-${i}`}
+            position={[0, y, 0]}
+            rotation={[0, (i * Math.PI) / 4, 0]}
+          >
+            <boxGeometry args={[spread * 2, 0.2, 0.2]} />
+            <meshStandardMaterial color={red} metalness={0.4} roughness={0.5} />
+          </mesh>
+        );
+      })}
+
+      {/* Red aircraft warning light at top */}
+      <pointLight
+        position={[0, towerHeight * 1.04, 0]}
+        color="#ff2200"
+        intensity={5}
+        distance={100}
+        decay={2}
+      />
+      <mesh position={[0, towerHeight * 1.04, 0]}>
+        <sphereGeometry args={[0.3, 8, 8]} />
+        <meshBasicMaterial color="#ff2200" />
+      </mesh>
+    </group>
+  );
+};
+
+// Pagodas — Japanese multi-tiered towers
+export const Pagodas = () => {
+  const { configuration } = useTrackContext();
+  const pagodaLandmarks = useMemo(
+    () =>
+      configuration.objectPositions.landmarks.filter(
+        (l) => l.type === "pagoda",
+      ),
+    [configuration.objectPositions.landmarks],
+  );
+
+  const pagodas = useMemo(
+    () =>
+      pagodaLandmarks.map((landmark) => ({
+        pos: landmark.position,
+        rot: landmark.rotation ?? 0,
+        name: (landmark.properties?.name as string) ?? "塔",
+        tiers: (landmark.properties?.tiers as number) ?? 5,
+        color: (landmark.properties?.color as string) ?? "#8b2020",
+        accent: (landmark.properties?.accent as string) ?? "#c8a050",
+      })),
+    [pagodaLandmarks],
+  );
+
+  if (pagodas.length === 0) return null;
+
+  return (
+    <group>
+      {pagodas.map((pagoda, i) => {
+        const tierHeight = 5;
+        const baseWidth = 10;
+
+        return (
+          <group
+            key={`pagoda-${i}`}
+            position={[pagoda.pos[0], 0, pagoda.pos[2]]}
+            rotation={[0, pagoda.rot, 0]}
+          >
+            {/* Stone base platform */}
+            <mesh position={[0, 0.5, 0]}>
+              <boxGeometry args={[baseWidth + 4, 1, baseWidth + 4]} />
+              <meshStandardMaterial color="#777777" roughness={0.9} />
+            </mesh>
+
+            {/* Tiers */}
+            {Array.from({ length: pagoda.tiers }).map((_, tier) => {
+              const tierScale = 1 - tier * 0.15;
+              const tierW = baseWidth * tierScale;
+              const yBase = 1 + tier * tierHeight;
+
+              return (
+                <group key={`tier-${tier}`}>
+                  {/* Tier body (walls) */}
+                  <mesh position={[0, yBase + tierHeight * 0.35, 0]}>
+                    <boxGeometry
+                      args={[tierW * 0.85, tierHeight * 0.7, tierW * 0.85]}
+                    />
+                    <meshStandardMaterial
+                      color={pagoda.color}
+                      roughness={0.8}
+                    />
+                  </mesh>
+
+                  {/* Curved roof overhang */}
+                  <mesh position={[0, yBase + tierHeight * 0.75, 0]}>
+                    <boxGeometry args={[tierW * 1.2, 0.3, tierW * 1.2]} />
+                    <meshStandardMaterial
+                      color={pagoda.accent}
+                      metalness={0.3}
+                      roughness={0.5}
+                    />
+                  </mesh>
+
+                  {/* Roof edge trim */}
+                  <mesh position={[0, yBase + tierHeight * 0.82, 0]}>
+                    <boxGeometry args={[tierW * 1.1, 0.15, tierW * 1.1]} />
+                    <meshStandardMaterial
+                      color={pagoda.color}
+                      roughness={0.7}
+                    />
+                  </mesh>
+
+                  {/* Window openings (front) */}
+                  {Array.from({
+                    length: Math.max(1, Math.floor(tierW / 3)),
+                  }).map((_, w) => {
+                    const windowCount = Math.max(1, Math.floor(tierW / 3));
+                    const spacing = (tierW * 0.7) / windowCount;
+                    const startX = -((windowCount - 1) * spacing) / 2;
+                    return (
+                      <mesh
+                        key={`win-${tier}-${w}`}
+                        position={[
+                          startX + w * spacing,
+                          yBase + tierHeight * 0.35,
+                          -tierW * 0.43,
+                        ]}
+                      >
+                        <planeGeometry args={[1.2, 2]} />
+                        <meshStandardMaterial
+                          color="#1a1208"
+                          emissive="#ffa040"
+                          emissiveIntensity={
+                            seededRandom(i * 500 + tier * 10 + w) > 0.4
+                              ? 0.2
+                              : 0
+                          }
+                          side={THREE.DoubleSide}
+                        />
+                      </mesh>
+                    );
+                  })}
+
+                  {/* Corner pillars */}
+                  {[
+                    [-1, -1],
+                    [1, -1],
+                    [-1, 1],
+                    [1, 1],
+                  ].map(([cx, cz], ci) => (
+                    <mesh
+                      key={`pillar-${tier}-${ci}`}
+                      position={[
+                        cx * tierW * 0.4,
+                        yBase + tierHeight * 0.35,
+                        cz * tierW * 0.4,
+                      ]}
+                    >
+                      <cylinderGeometry
+                        args={[0.15, 0.2, tierHeight * 0.7, 6]}
+                      />
+                      <meshStandardMaterial
+                        color={pagoda.accent}
+                        roughness={0.6}
+                      />
+                    </mesh>
+                  ))}
+                </group>
+              );
+            })}
+
+            {/* Spire on top */}
+            <mesh position={[0, 1 + pagoda.tiers * tierHeight + 1.5, 0]}>
+              <coneGeometry args={[0.4, 3, 6]} />
+              <meshStandardMaterial
+                color={pagoda.accent}
+                metalness={0.5}
+                roughness={0.3}
+              />
+            </mesh>
+
+            {/* Name plate at base */}
+            <mesh position={[0, 2.5, -(baseWidth / 2 + 2.5)]}>
+              <boxGeometry args={[6, 1.8, 0.3]} />
+              <meshStandardMaterial color={pagoda.accent} roughness={0.6} />
+            </mesh>
           </group>
         );
       })}
@@ -1103,12 +1478,12 @@ export const Hotels = () => {
                       : "#c8dce8"
                   }
                   emissive={
-                    seededRandom(i * 2000 + floor * 10 + col) > 0.5
+                    seededRandom(i * 2000 + floor * 10 + col) > 0.2
                       ? "#ffd080"
-                      : "#000000"
+                      : "#88aacc"
                   }
                   emissiveIntensity={
-                    seededRandom(i * 2000 + floor * 10 + col) > 0.5 ? 0.15 : 0
+                    seededRandom(i * 2000 + floor * 10 + col) > 0.2 ? 0.6 : 0.3
                   }
                   metalness={0.6}
                   roughness={0.2}
@@ -1128,6 +1503,8 @@ export const Hotels = () => {
                 <planeGeometry args={[1.6, 2.2]} />
                 <meshStandardMaterial
                   color="#8ec8e8"
+                  emissive="#ffd080"
+                  emissiveIntensity={0.5}
                   metalness={0.6}
                   roughness={0.2}
                 />
@@ -1369,7 +1746,7 @@ export const Cathedral = () => {
       ),
     [configuration.objectPositions.landmarks],
   );
-  const cathedralPosition = cathedralLandmark?.position ?? [-130, 0, -40];
+  const cathedralPosition = cathedralLandmark?.position ?? [0, 0, 0];
   const cathedralRotation = cathedralLandmark?.rotation ?? 0.5;
 
   const stone = "#8a8a88";
@@ -1505,6 +1882,8 @@ export const Cathedral = () => {
     context.globalAlpha = 1;
     return new THREE.CanvasTexture(canvas);
   }, []);
+
+  if (!cathedralLandmark) return null;
 
   return (
     <group position={cathedralPosition} rotation={[0, cathedralRotation, 0]}>
@@ -1768,8 +2147,9 @@ export const EquestrianStatue = () => {
       ),
     [configuration.objectPositions.landmarks],
   );
-  const statuePosition = statueLandmark?.position ?? [150, 0, -55];
-  const statueRotation = statueLandmark?.rotation ?? -0.8;
+  if (!statueLandmark) return null;
+  const statuePosition = statueLandmark.position;
+  const statueRotation = statueLandmark.rotation ?? -0.8;
 
   return (
     <group position={statuePosition} rotation={[0, statueRotation, 0]}>
@@ -1869,8 +2249,9 @@ export const Castle = () => {
       configuration.objectPositions.landmarks.find((l) => l.type === "castle"),
     [configuration.objectPositions.landmarks],
   );
-  const castlePosition = castleLandmark?.position ?? [420, 0, -300];
-  const castleRotation = castleLandmark?.rotation ?? 0.3;
+  if (!castleLandmark) return null;
+  const castlePosition = castleLandmark.position;
+  const castleRotation = castleLandmark.rotation ?? 0.3;
 
   const stoneColor = "#f0ece4";
   const darkStone = "#d8d0c4";

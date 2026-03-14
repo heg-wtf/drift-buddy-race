@@ -7,6 +7,8 @@ import {
   Cathedral,
   EquestrianStatue,
   Hotels,
+  Pagodas,
+  TokyoTower,
   TrackAdBoards,
   TrackBillboards,
   TrackBillboardsAWS,
@@ -120,12 +122,14 @@ export const buildTrackBounds = (
 const BarrierWall = ({
   points,
   color,
+  height = 0.5,
 }: {
   points: { pos: THREE.Vector3; dir: THREE.Vector3 }[];
   color: string;
+  height?: number;
 }) => {
   const geometry = useMemo(() => {
-    const barrierHeight = 0.5;
+    const barrierHeight = height;
     const barrierThickness = 0.35;
     const count = points.length;
 
@@ -248,58 +252,233 @@ const CenterLineDashes = ({
 // Mountain renderer — driven by config data
 const Mountains = ({ mountains }: { mountains: MountainData[] }) => (
   <>
-    {mountains.map((mountain, i) => (
-      <group key={`mountain-${i}`}>
-        <mesh
-          position={[
-            mountain.position[0],
-            mountain.height / 2 - 5,
-            mountain.position[2],
-          ]}
-        >
-          <coneGeometry args={[mountain.radius, mountain.height, 8]} />
-          <meshStandardMaterial color={mountain.color} roughness={0.95} />
-        </mesh>
-        <mesh
-          position={[
-            mountain.position[0],
-            mountain.height * 0.75,
-            mountain.position[2],
-          ]}
-        >
-          <coneGeometry
-            args={[mountain.radius * 0.3, mountain.height * 0.35, 8]}
-          />
-          <meshStandardMaterial color="#f0f0f0" roughness={0.7} />
-        </mesh>
-        <mesh
-          position={[
-            mountain.position[0] + mountain.radius * 0.6,
-            mountain.height * 0.3 - 5,
-            mountain.position[2] + mountain.radius * 0.3,
-          ]}
-        >
-          <coneGeometry
-            args={[mountain.radius * 0.5, mountain.height * 0.6, 7]}
-          />
-          <meshStandardMaterial color={mountain.color} roughness={0.95} />
-        </mesh>
-        <mesh
-          position={[
-            mountain.position[0] + mountain.radius * 0.6,
-            mountain.height * 0.55,
-            mountain.position[2] + mountain.radius * 0.3,
-          ]}
-        >
-          <coneGeometry
-            args={[mountain.radius * 0.15, mountain.height * 0.18, 7]}
-          />
-          <meshStandardMaterial color="#e8e8e8" roughness={0.7} />
-        </mesh>
-      </group>
-    ))}
+    {mountains.map((mountain, i) => {
+      const isFuji = mountain.height >= 120;
+      const mx = mountain.position[0];
+      const mz = mountain.position[2];
+
+      if (isFuji) {
+        return (
+          <group key={`mountain-${i}`}>
+            {/* Fuji main body — wide symmetric cone */}
+            <mesh position={[mx, mountain.height / 2 - 5, mz]}>
+              <coneGeometry args={[mountain.radius, mountain.height, 12]} />
+              <meshStandardMaterial color="#3a3a52" roughness={0.9} />
+            </mesh>
+
+            {/* Snow cap */}
+            <mesh position={[mx, mountain.height * 0.72, mz]}>
+              <coneGeometry
+                args={[mountain.radius * 0.35, mountain.height * 0.4, 12]}
+              />
+              <meshStandardMaterial color="#e8e8f0" roughness={0.6} />
+            </mesh>
+
+            {/* Crater rim */}
+            <mesh
+              position={[mx, mountain.height * 0.9, mz]}
+              rotation={[-Math.PI / 2, 0, 0]}
+            >
+              <torusGeometry
+                args={[mountain.radius * 0.08, mountain.radius * 0.03, 8, 12]}
+              />
+              <meshStandardMaterial color="#4a2a1a" roughness={0.9} />
+            </mesh>
+
+            {/* Lava glow inside crater */}
+            <mesh position={[mx, mountain.height * 0.88, mz]}>
+              <cylinderGeometry
+                args={[mountain.radius * 0.06, mountain.radius * 0.08, 2, 12]}
+              />
+              <meshBasicMaterial color="#ff4400" />
+            </mesh>
+            <pointLight
+              position={[mx, mountain.height * 0.92, mz]}
+              color="#ff4400"
+              intensity={20}
+              distance={150}
+              decay={2}
+            />
+
+            {/* Lava streams flowing down */}
+            {[0, Math.PI * 0.6, Math.PI * 1.3].map((angle, li) => {
+              const segments = 6;
+              return (
+                <group key={`lava-${li}`}>
+                  {Array.from({ length: segments }).map((_, si) => {
+                    const t = si / segments;
+                    const r = mountain.radius * (0.06 + t * 0.35);
+                    const lx = mx + Math.sin(angle) * r;
+                    const lz = mz + Math.cos(angle) * r;
+                    const ly = mountain.height * (0.88 - t * 0.45);
+                    const blobSize = 2.5 + t * 2;
+                    return (
+                      <mesh key={`lava-seg-${si}`} position={[lx, ly, lz]}>
+                        <sphereGeometry args={[blobSize, 8, 8]} />
+                        <meshBasicMaterial
+                          color={si < 2 ? "#ff2200" : "#ff5500"}
+                        />
+                      </mesh>
+                    );
+                  })}
+                  <pointLight
+                    position={[
+                      mx + Math.sin(angle) * mountain.radius * 0.2,
+                      mountain.height * 0.65,
+                      mz + Math.cos(angle) * mountain.radius * 0.2,
+                    ]}
+                    color="#ff3300"
+                    intensity={15}
+                    distance={120}
+                    decay={1.5}
+                  />
+                </group>
+              );
+            })}
+
+            {/* Smoke/steam at top */}
+            {[0, 1, 2].map((si) => (
+              <mesh
+                key={`smoke-${si}`}
+                position={[
+                  mx + (si - 1) * 3,
+                  mountain.height * 0.95 + si * 4,
+                  mz + si * 2,
+                ]}
+              >
+                <sphereGeometry args={[3 + si * 2, 8, 8]} />
+                <meshStandardMaterial
+                  color="#888888"
+                  transparent
+                  opacity={0.3 - si * 0.08}
+                />
+              </mesh>
+            ))}
+          </group>
+        );
+      }
+
+      return (
+        <group key={`mountain-${i}`}>
+          <mesh position={[mx, mountain.height / 2 - 5, mz]}>
+            <coneGeometry args={[mountain.radius, mountain.height, 8]} />
+            <meshStandardMaterial color={mountain.color} roughness={0.95} />
+          </mesh>
+          <mesh position={[mx, mountain.height * 0.75, mz]}>
+            <coneGeometry
+              args={[mountain.radius * 0.3, mountain.height * 0.35, 8]}
+            />
+            <meshStandardMaterial color="#f0f0f0" roughness={0.7} />
+          </mesh>
+          <mesh
+            position={[
+              mx + mountain.radius * 0.6,
+              mountain.height * 0.3 - 5,
+              mz + mountain.radius * 0.3,
+            ]}
+          >
+            <coneGeometry
+              args={[mountain.radius * 0.5, mountain.height * 0.6, 7]}
+            />
+            <meshStandardMaterial color={mountain.color} roughness={0.95} />
+          </mesh>
+          <mesh
+            position={[
+              mx + mountain.radius * 0.6,
+              mountain.height * 0.55,
+              mz + mountain.radius * 0.3,
+            ]}
+          >
+            <coneGeometry
+              args={[mountain.radius * 0.15, mountain.height * 0.18, 7]}
+            />
+            <meshStandardMaterial color="#e8e8e8" roughness={0.7} />
+          </mesh>
+        </group>
+      );
+    })}
   </>
 );
+
+const LIGHT_STEP = 30; // every N-th sample point
+const LIGHT_POLE_HEIGHT = 12;
+const LIGHT_OFFSET = 4; // offset outside barrier
+
+const TrackLights = ({
+  centerPoints,
+  width,
+}: {
+  centerPoints: THREE.Vector3[];
+  width: number;
+}) => {
+  const lights = useMemo(() => {
+    const result: { position: THREE.Vector3; direction: THREE.Vector3 }[] = [];
+    for (let i = 0; i < centerPoints.length; i += LIGHT_STEP) {
+      const point = centerPoints[i];
+      const next = centerPoints[(i + 1) % centerPoints.length];
+      const tangent = new THREE.Vector3().subVectors(next, point).normalize();
+      const perp = new THREE.Vector3(-tangent.z, 0, tangent.x);
+
+      // Alternate left and right side
+      const side = i % (LIGHT_STEP * 2) === 0 ? 1 : -1;
+      const offset = width / 2 + LIGHT_OFFSET;
+      const pos = new THREE.Vector3(
+        point.x + perp.x * offset * side,
+        0,
+        point.z + perp.z * offset * side,
+      );
+      result.push({ position: pos, direction: perp });
+    }
+    return result;
+  }, [centerPoints, width]);
+
+  return (
+    <group>
+      {lights.map((light, i) => (
+        <group key={`track-light-${i}`}>
+          {/* Pole */}
+          <mesh
+            position={[
+              light.position.x,
+              LIGHT_POLE_HEIGHT / 2,
+              light.position.z,
+            ]}
+          >
+            <cylinderGeometry args={[0.12, 0.15, LIGHT_POLE_HEIGHT, 6]} />
+            <meshStandardMaterial
+              color="#555555"
+              metalness={0.6}
+              roughness={0.4}
+            />
+          </mesh>
+          {/* Lamp head */}
+          <mesh
+            position={[light.position.x, LIGHT_POLE_HEIGHT, light.position.z]}
+          >
+            <boxGeometry args={[0.8, 0.3, 0.5]} />
+            <meshStandardMaterial
+              color="#ffffff"
+              emissive="#ffeedd"
+              emissiveIntensity={0.8}
+            />
+          </mesh>
+          {/* Point light */}
+          <pointLight
+            position={[
+              light.position.x,
+              LIGHT_POLE_HEIGHT - 0.5,
+              light.position.z,
+            ]}
+            color="#ffeedd"
+            intensity={50}
+            distance={50}
+            decay={1.5}
+          />
+        </group>
+      ))}
+    </group>
+  );
+};
 
 interface TrackProps {
   width?: number;
@@ -386,8 +565,16 @@ export const Track = ({ width = 10 }: TrackProps) => {
       <CenterLineDashes centerPoints={centerPoints} />
 
       {/* Barrier walls */}
-      <BarrierWall points={leftBarrier} color="#e6b800" />
-      <BarrierWall points={rightBarrier} color="#e6b800" />
+      <BarrierWall
+        points={leftBarrier}
+        color={configuration.definition.barrierStyle?.color ?? "#e6b800"}
+        height={configuration.definition.barrierStyle?.height ?? 0.5}
+      />
+      <BarrierWall
+        points={rightBarrier}
+        color={configuration.definition.barrierStyle?.color ?? "#e6b800"}
+        height={configuration.definition.barrierStyle?.height ?? 0.5}
+      />
 
       {/* Start / finish line */}
       <mesh
@@ -397,6 +584,9 @@ export const Track = ({ width = 10 }: TrackProps) => {
         <planeGeometry args={[width, 2.6]} />
         <meshStandardMaterial color="#f8fafc" side={THREE.DoubleSide} />
       </mesh>
+
+      {/* Track lights */}
+      <TrackLights centerPoints={centerPoints} width={width} />
 
       {/* Mountains — from config */}
       <Mountains mountains={environment.mountains} />
@@ -411,6 +601,8 @@ export const Track = ({ width = 10 }: TrackProps) => {
       <TrackTrees />
       <TrackBuildings />
       <Hotels />
+      <Pagodas />
+      <TokyoTower />
       <Cathedral />
       <EquestrianStatue />
       <Castle />

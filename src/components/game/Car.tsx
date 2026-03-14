@@ -199,6 +199,13 @@ export const Car = ({
   const trackBounds = useRef(contextTrackBounds);
   const trackPointsForProgress = useRef(trackPath.current.getPoints(100));
 
+  // Sync refs when track selection changes
+  useEffect(() => {
+    trackPath.current = contextTrackPath;
+    trackBounds.current = contextTrackBounds;
+    trackPointsForProgress.current = contextTrackPath.getPoints(100);
+  }, [contextTrackPath, contextTrackBounds]);
+
   // Sponsor textures per car (deterministic by id)
   const sponsors = useMemo(() => {
     const {
@@ -276,7 +283,7 @@ export const Car = ({
         rotation.current = Math.atan2(aiDir.x, aiDir.z);
       }
     }
-  }, []);
+  }, [contextTrackPath]);
 
   const checkWallCollision = (
     pos: THREE.Vector3,
@@ -1476,7 +1483,7 @@ export const Car = ({
           )}
 
           {/* Boost trail particles - always mounted, visibility controlled in useFrame */}
-          <points ref={boostTrailRef} visible={false}>
+          <points ref={boostTrailRef}>
             <bufferGeometry>
               <bufferAttribute
                 attach="attributes-position"

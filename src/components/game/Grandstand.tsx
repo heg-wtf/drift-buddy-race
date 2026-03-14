@@ -38,10 +38,24 @@ export const StartGrandstand = () => {
   const meshes = useMemo(() => {
     const { rows, seatsPerRow, startX, startZ, facingRotation } =
       startGrandstand;
+    const rot = startGrandstand.grandstandRotation ?? 0;
     const seatWidth = 1.6;
     const rowDepth = 1.8;
     const rowHeightStep = 1.1;
     const total = rows * seatsPerRow;
+
+    // Center of grandstand (before rotation)
+    const centerX = startX + (rows * rowDepth) / 2;
+    const centerZ = startZ + (seatsPerRow * seatWidth) / 2;
+
+    // Rotate point around center
+    const cosR = Math.cos(rot);
+    const sinR = Math.sin(rot);
+    const rotatePoint = (lx: number, lz: number): [number, number] => {
+      const dx = lx - centerX;
+      const dz = lz - centerZ;
+      return [centerX + dx * cosR - dz * sinR, centerZ + dx * sinR + dz * cosR];
+    };
 
     const dummy = new THREE.Object3D();
     const color = new THREE.Color();
@@ -71,23 +85,29 @@ export const StartGrandstand = () => {
     let idx = 0;
     for (let r = 0; r < rows; r++) {
       for (let s = 0; s < seatsPerRow; s++) {
-        const x = startX + r * rowDepth;
+        const localX = startX + r * rowDepth;
         const y = r * rowHeightStep + 0.12;
-        const z = startZ + s * seatWidth;
+        const localZ = startZ + s * seatWidth;
+        const [x, z] = rotatePoint(localX, localZ);
 
         // Seat
         dummy.position.set(x, y, z);
-        dummy.rotation.set(0, 0, 0);
+        dummy.rotation.set(0, rot, 0);
         dummy.scale.set(1, 1, 1);
         dummy.updateMatrix();
         seatMesh.setMatrixAt(idx, dummy.matrix);
 
         // Body
         const hScale = 0.7 + Math.random() * 0.5;
-        const px = x + (Math.random() - 0.5) * 0.3;
-        const pz = z + (Math.random() - 0.5) * 0.3;
+        const bLocalX = localX + (Math.random() - 0.5) * 0.3;
+        const bLocalZ = localZ + (Math.random() - 0.5) * 0.3;
+        const [px, pz] = rotatePoint(bLocalX, bLocalZ);
         dummy.position.set(px, y + 0.6, pz);
-        dummy.rotation.set(0, facingRotation + (Math.random() - 0.5) * 0.4, 0);
+        dummy.rotation.set(
+          0,
+          facingRotation + rot + (Math.random() - 0.5) * 0.4,
+          0,
+        );
         dummy.scale.set(1, hScale, 1);
         dummy.updateMatrix();
         bodyMesh.setMatrixAt(idx, dummy.matrix);
@@ -119,6 +139,18 @@ export const StartGrandstand = () => {
     const roofD = seatsPerRow * seatWidth + 2;
     const roofY = rows * rowHeightStep + 1.5;
 
+    // Compute rotated roof/pillar positions
+    const roofLocalX = startX + (rows * rowDepth) / 2;
+    const roofLocalZ = startZ + (seatsPerRow * seatWidth) / 2 - seatWidth / 2;
+    const [roofRX, roofRZ] = rotatePoint(roofLocalX, roofLocalZ);
+
+    const pillarCorners = [
+      [startX, startZ],
+      [startX, startZ + (seatsPerRow - 1) * seatWidth],
+      [startX + (rows - 1) * rowDepth, startZ],
+      [startX + (rows - 1) * rowDepth, startZ + (seatsPerRow - 1) * seatWidth],
+    ].map(([lx, lz]) => rotatePoint(lx, lz));
+
     return {
       seatMesh,
       bodyMesh,
@@ -126,28 +158,14 @@ export const StartGrandstand = () => {
       roofW,
       roofD,
       roofY,
-      startX,
-      startZ,
-      rows,
-      seatsPerRow,
-      rowDepth,
-      seatWidth,
+      roofRX,
+      roofRZ,
+      pillarCorners,
+      rot,
     };
   }, [startGrandstand]);
 
-  const {
-    roofW,
-    roofD,
-    roofY,
-    startX,
-    startZ,
-    rows,
-    seatsPerRow,
-    rowDepth,
-    seatWidth,
-  } = meshes;
-  const roofX = startX + (rows * rowDepth) / 2;
-  const roofZ = startZ + (seatsPerRow * seatWidth) / 2 - seatWidth / 2;
+  const { roofW, roofD, roofY, roofRX, roofRZ, pillarCorners } = meshes;
 
   return (
     <group>
@@ -155,20 +173,12 @@ export const StartGrandstand = () => {
       <primitive object={meshes.bodyMesh} />
       <primitive object={meshes.headMesh} />
       {/* Roof */}
-      <mesh position={[roofX, roofY, roofZ]}>
+      <mesh position={[roofRX, roofY, roofRZ]} rotation={[0, meshes.rot, 0]}>
         <boxGeometry args={[roofW, 0.15, roofD]} />
         <meshStandardMaterial color="#2d3748" metalness={0.5} roughness={0.4} />
       </mesh>
       {/* 4 pillars */}
-      {[
-        [startX, startZ],
-        [startX, startZ + (seatsPerRow - 1) * seatWidth],
-        [startX + (rows - 1) * rowDepth, startZ],
-        [
-          startX + (rows - 1) * rowDepth,
-          startZ + (seatsPerRow - 1) * seatWidth,
-        ],
-      ].map(([px, pz], i) => (
+      {pillarCorners.map(([px, pz], i) => (
         <mesh key={i} position={[px, roofY / 2, pz]}>
           <cylinderGeometry args={[0.1, 0.1, roofY, 6]} />
           <meshStandardMaterial color="#444444" metalness={0.3} />

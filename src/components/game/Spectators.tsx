@@ -4,8 +4,6 @@ import { useFrame } from "@react-three/fiber";
 import { useTrackContext } from "./tracks";
 import { SPECTATOR_COLORS, SKIN_TONES } from "./Grandstand";
 
-const TRACK_HALF_WIDTH = 10;
-const TRACK_SAMPLE_COUNT = 600;
 const ANIMATION_GROUPS = 6;
 
 // Deterministic pseudo-random from seed
@@ -22,8 +20,9 @@ const isSafeFromDistantTrack = (
   trackPoints: THREE.Vector3[],
   sourceIndex: number,
   skipRange: number,
+  trackHalfWidth: number,
 ): boolean => {
-  const minimumDistanceSquared = (TRACK_HALF_WIDTH + radius + 3) ** 2;
+  const minimumDistanceSquared = (trackHalfWidth + radius + 3) ** 2;
   for (let i = 0; i < trackPoints.length; i += 3) {
     const indexDistance = Math.min(
       Math.abs(i - sourceIndex),
@@ -49,6 +48,8 @@ export const TrackSpectators = () => {
   const { trackPath, configuration } = useTrackContext();
   const { grandstandConfigurations, standingClusterSeeds } =
     configuration.objectPositions;
+  const trackHalfWidth = configuration.definition.trackWidth / 2;
+  const samplePointCount = configuration.definition.samplePointCount;
   const bodyMeshReference = useRef<THREE.InstancedMesh>(null);
   const headMeshReference = useRef<THREE.InstancedMesh>(null);
   const legMeshReference = useRef<THREE.InstancedMesh>(null);
@@ -56,6 +57,7 @@ export const TrackSpectators = () => {
   const spectatorDataReference = useRef<SpectatorData[]>([]);
   const flagIndices = useRef<number[]>([]);
   const clockReference = useRef(0);
+  const dummyObject = useRef(new THREE.Object3D());
   const animationGroupReference = useRef(0);
 
   const {
@@ -66,7 +68,7 @@ export const TrackSpectators = () => {
     flagCount,
     grandstandStructures,
   } = useMemo(() => {
-    const trackPoints = trackPath.getPoints(TRACK_SAMPLE_COUNT);
+    const trackPoints = trackPath.getPoints(samplePointCount);
     const dummy = new THREE.Object3D();
     const color = new THREE.Color();
     const allSpectatorData: SpectatorData[] = [];
@@ -277,7 +279,7 @@ export const TrackSpectators = () => {
         const spreadAlongTrack =
           (seededRandom(trackIndex * 1000 + personIndex * 17) - 0.5) * 6;
         const distanceFromTrack =
-          TRACK_HALF_WIDTH +
+          trackHalfWidth +
           6 +
           seededRandom(trackIndex * 1000 + personIndex * 23) * 5;
 
@@ -298,6 +300,7 @@ export const TrackSpectators = () => {
             trackPoints,
             safeIndex,
             60,
+            trackHalfWidth,
           )
         ) {
           clusterPositions.push({
@@ -512,7 +515,13 @@ export const TrackSpectators = () => {
         }),
       ),
     };
-  }, [trackPath, grandstandConfigurations, standingClusterSeeds]);
+  }, [
+    trackPath,
+    grandstandConfigurations,
+    standingClusterSeeds,
+    trackHalfWidth,
+    samplePointCount,
+  ]);
 
   // Idle animation: subtle body sway + head bob, round-robin across groups
   useFrame((_, delta) => {
@@ -523,7 +532,7 @@ export const TrackSpectators = () => {
     const time = clockReference.current;
     const currentGroup = animationGroupReference.current;
     const allData = spectatorDataReference.current;
-    const dummy = new THREE.Object3D();
+    const dummy = dummyObject.current;
 
     if (!bodyMeshReference.current || !headMeshReference.current) return;
 

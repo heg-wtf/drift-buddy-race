@@ -8,6 +8,8 @@ const SKIDMARK_Y = 0.02;
 const MIN_STAMP_DISTANCE = 0.15;
 const VERTICES_PER_SEGMENT = 4;
 const INDICES_PER_SEGMENT = 6;
+const NEW_TRAIL_GAP_SECONDS = 0.15;
+const TAPER_SEGMENT_COUNT = 3;
 
 export interface SkidMarkHandle {
   addSegment: (
@@ -27,10 +29,31 @@ interface SegmentMeta {
 
 const _perpendicular = new THREE.Vector3();
 
+const skidVertexShader = /* glsl */ `
+  attribute float alpha;
+  varying vec3 vColor;
+  varying float vAlpha;
+  void main() {
+    vColor = color;
+    vAlpha = alpha;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }
+`;
+
+const skidFragmentShader = /* glsl */ `
+  varying vec3 vColor;
+  varying float vAlpha;
+  void main() {
+    gl_FragColor = vec4(vColor, vAlpha);
+  }
+`;
+
 export const SkidMarks = forwardRef<SkidMarkHandle>((_props, ref) => {
   const meshRef = useRef<THREE.Mesh>(null);
   const nextIndex = useRef(0);
   const lastPositions = useRef(new Map<string, THREE.Vector3>());
+  const lastTimestamps = useRef(new Map<string, number>());
+  const trailSegmentCounts = useRef(new Map<string, number>());
   const segmentMeta = useRef<SegmentMeta[]>(
     Array.from({ length: MAX_SEGMENTS }, () => ({
       createdAt: 0,
@@ -39,13 +62,14 @@ export const SkidMarks = forwardRef<SkidMarkHandle>((_props, ref) => {
     })),
   );
 
-  const { positions, colors, indices } = useMemo(() => {
+  const { positions, colors, alphas, indices } = useMemo(() => {
     const positionArray = new Float32Array(
       MAX_SEGMENTS * VERTICES_PER_SEGMENT * 3,
     );
     const colorArray = new Float32Array(
       MAX_SEGMENTS * VERTICES_PER_SEGMENT * 3,
     );
+    const alphaArray = new Float32Array(MAX_SEGMENTS * VERTICES_PER_SEGMENT);
     const indexArray = new Uint32Array(MAX_SEGMENTS * INDICES_PER_SEGMENT);
 
     // Initialize all positions below ground (hidden)
@@ -54,6 +78,7 @@ export const SkidMarks = forwardRef<SkidMarkHandle>((_props, ref) => {
       colorArray[i * 3] = 0.1;
       colorArray[i * 3 + 1] = 0.1;
       colorArray[i * 3 + 2] = 0.1;
+      alphaArray[i] = 0;
     }
 
     // Pre-build index buffer for quad strips
@@ -73,9 +98,26 @@ export const SkidMarks = forwardRef<SkidMarkHandle>((_props, ref) => {
     return {
       positions: positionArray,
       colors: colorArray,
+      alphas: alphaArray,
       indices: indexArray,
     };
   }, []);
+
+  const shaderMaterial = useMemo(
+    () =>
+      new THREE.ShaderMaterial({
+        vertexShader: skidVertexShader,
+        fragmentShader: skidFragmentShader,
+        vertexColors: true,
+        transparent: true,
+        depthWrite: false,
+        side: THREE.DoubleSide,
+        polygonOffset: true,
+        polygonOffsetFactor: -1,
+        polygonOffsetUnits: -1,
+      }),
+    [],
+  );
 
   useImperativeHandle(
     ref,
@@ -89,6 +131,7 @@ export const SkidMarks = forwardRef<SkidMarkHandle>((_props, ref) => {
       ) {
         const key = `${carId}-${wheelIndex}`;
         const lastPosition = lastPositions.current.get(key);
+        const now = performance.now() / 1000;
 
         if (
           lastPosition &&
@@ -102,10 +145,33 @@ export const SkidMarks = forwardRef<SkidMarkHandle>((_props, ref) => {
 
         if (!lastPosition) {
           lastPositions.current.set(key, currentPosition);
+          lastTimestamps.current.set(key, now);
+          trailSegmentCounts.current.set(key, 0);
           return;
         }
 
-        const halfWidth = 0.08 + intensity * 0.12;
+        // Detect new trail start (gap in time)
+        const lastTime = lastTimestamps.current.get(key) ?? 0;
+        if (now - lastTime > NEW_TRAIL_GAP_SECONDS) {
+          trailSegmentCounts.current.set(key, 0);
+        }
+
+        const trailCount = trailSegmentCounts.current.get(key) ?? 0;
+
+        // Start taper: first few segments grow from 30% to 100% width
+        let taperFactor = 1.0;
+        if (trailCount < TAPER_SEGMENT_COUNT) {
+          taperFactor = 0.3 + (0.7 * trailCount) / TAPER_SEGMENT_COUNT;
+        }
+
+        // Width micro-variation (±10%)
+        const randomFactor = 0.9 + Math.random() * 0.2;
+
+        const halfWidth =
+          (0.08 + intensity * 0.12) * taperFactor * randomFactor;
+
+        // Intensity-based alpha
+        const segmentAlpha = 0.3 + intensity * 0.7;
 
         // Perpendicular to forward direction on the XZ plane
         _perpendicular.set(-carForwardDirection.z, 0, carForwardDirection.x);
@@ -139,23 +205,27 @@ export const SkidMarks = forwardRef<SkidMarkHandle>((_props, ref) => {
         positions[vertexBase + 11] =
           currentPosition.z + _perpendicular.z * halfWidth;
 
-        // Set color (dark rubber) with brightness encoding alpha
+        // Set color: warm rubber tint instead of pure grey
         const darkness = 0.05 + (1 - intensity) * 0.05;
         const colorBase = segmentIndex * VERTICES_PER_SEGMENT * 3;
+        const alphaBase = segmentIndex * VERTICES_PER_SEGMENT;
         for (let v = 0; v < VERTICES_PER_SEGMENT; v++) {
-          colors[colorBase + v * 3] = darkness;
-          colors[colorBase + v * 3 + 1] = darkness;
-          colors[colorBase + v * 3 + 2] = darkness;
+          colors[colorBase + v * 3] = darkness * 1.15;
+          colors[colorBase + v * 3 + 1] = darkness * 1.05;
+          colors[colorBase + v * 3 + 2] = darkness * 0.85;
+          alphas[alphaBase + v] = segmentAlpha;
         }
 
         // Update metadata
         segmentMeta.current[segmentIndex] = {
-          createdAt: performance.now() / 1000,
-          initialAlpha: intensity,
+          createdAt: now,
+          initialAlpha: segmentAlpha,
           active: true,
         };
 
         lastPositions.current.set(key, currentPosition);
+        lastTimestamps.current.set(key, now);
+        trailSegmentCounts.current.set(key, trailCount + 1);
         nextIndex.current = (nextIndex.current + 1) % MAX_SEGMENTS;
 
         // Mark buffers dirty
@@ -163,10 +233,11 @@ export const SkidMarks = forwardRef<SkidMarkHandle>((_props, ref) => {
           const geometry = meshRef.current.geometry;
           geometry.attributes.position.needsUpdate = true;
           geometry.attributes.color.needsUpdate = true;
+          geometry.attributes.alpha.needsUpdate = true;
         }
       },
     }),
-    [positions, colors],
+    [positions, colors, alphas],
   );
 
   // Fade old segments
@@ -193,25 +264,30 @@ export const SkidMarks = forwardRef<SkidMarkHandle>((_props, ref) => {
         continue;
       }
 
-      // Fade: blend color from dark rubber toward road color (#68655e ≈ 0.41, 0.40, 0.37)
-      const fadeRatio = age / FADE_DURATION;
+      // Non-linear fade (easeOut): fast fade then slow tail
+      const t = age / FADE_DURATION;
+      const fadeRatio = 1 - (1 - t) * (1 - t);
+
       const darkness = 0.05 + fadeRatio * 0.35;
       const colorBase = i * VERTICES_PER_SEGMENT * 3;
+      const alphaBase = i * VERTICES_PER_SEGMENT;
       for (let v = 0; v < VERTICES_PER_SEGMENT; v++) {
-        colors[colorBase + v * 3] = darkness;
-        colors[colorBase + v * 3 + 1] = darkness;
-        colors[colorBase + v * 3 + 2] = darkness;
+        colors[colorBase + v * 3] = darkness * 1.15;
+        colors[colorBase + v * 3 + 1] = darkness * 1.05;
+        colors[colorBase + v * 3 + 2] = darkness * 0.85;
+        alphas[alphaBase + v] = meta.initialAlpha * (1 - fadeRatio);
       }
       needsColorUpdate = true;
     }
 
     if (needsColorUpdate) {
       meshRef.current.geometry.attributes.color.needsUpdate = true;
+      meshRef.current.geometry.attributes.alpha.needsUpdate = true;
     }
   });
 
   return (
-    <mesh ref={meshRef}>
+    <mesh ref={meshRef} material={shaderMaterial}>
       <bufferGeometry>
         <bufferAttribute
           attach="attributes-position"
@@ -226,20 +302,18 @@ export const SkidMarks = forwardRef<SkidMarkHandle>((_props, ref) => {
           itemSize={3}
         />
         <bufferAttribute
+          attach="attributes-alpha"
+          count={MAX_SEGMENTS * VERTICES_PER_SEGMENT}
+          array={alphas}
+          itemSize={1}
+        />
+        <bufferAttribute
           attach="index"
           count={MAX_SEGMENTS * INDICES_PER_SEGMENT}
           array={indices}
           itemSize={1}
         />
       </bufferGeometry>
-      <meshBasicMaterial
-        vertexColors
-        depthWrite={false}
-        polygonOffset
-        polygonOffsetFactor={-1}
-        polygonOffsetUnits={-1}
-        side={THREE.DoubleSide}
-      />
     </mesh>
   );
 });

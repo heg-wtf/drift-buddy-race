@@ -1,5 +1,10 @@
 export type TrackIdentifier = string;
 
+export interface BarrierStyle {
+  color: string;
+  height: number;
+}
+
 export interface TrackDefinition {
   identifier: TrackIdentifier;
   displayName: string;
@@ -8,6 +13,7 @@ export interface TrackDefinition {
   controlPoints: [number, number][];
   trackWidth: number;
   samplePointCount: number;
+  barrierStyle?: BarrierStyle;
 }
 
 export interface MountainData {
@@ -57,7 +63,9 @@ export interface LandmarkData {
     | "cathedral"
     | "castle"
     | "equestrian-statue"
-    | "yacht-cluster";
+    | "yacht-cluster"
+    | "pagoda"
+    | "tokyo-tower";
   position: [number, number, number];
   rotation?: number;
   scale?: number;
@@ -85,6 +93,7 @@ export interface TrackObjectPositions {
     rows: number;
     seatsPerRow: number;
     facingRotation: number;
+    grandstandRotation?: number;
   };
   adBoardPosition: [number, number, number];
   grandstandConfigurations: GrandstandConfiguration[];

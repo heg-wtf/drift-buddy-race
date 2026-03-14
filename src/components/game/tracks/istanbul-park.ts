@@ -3,8 +3,8 @@ import { TrackConfiguration } from "./types";
 export const ISTANBUL_PARK: TrackConfiguration = {
   definition: {
     identifier: "istanbul-park",
-    displayName: "Istanbul Park",
-    description: "Famous Turkish circuit with multi-apex Turn 8",
+    displayName: "Havana Park",
+    description: "Multi-apex corners with elevation",
     previewColor: "#e63946",
     controlPoints: [
       [40, -20],

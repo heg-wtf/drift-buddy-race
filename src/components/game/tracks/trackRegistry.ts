@@ -1,8 +1,12 @@
 import { TrackConfiguration, TrackIdentifier } from "./types";
 import { ISTANBUL_PARK } from "./istanbul-park";
+import { MONACO_CITY_CIRCUIT } from "./monaco-city-circuit";
+import { TOKYO_CITY_CIRCUIT } from "./silverstone-countryside-circuit";
 
 const TRACK_MAP = new Map<TrackIdentifier, TrackConfiguration>([
   [ISTANBUL_PARK.definition.identifier, ISTANBUL_PARK],
+  [MONACO_CITY_CIRCUIT.definition.identifier, MONACO_CITY_CIRCUIT],
+  [TOKYO_CITY_CIRCUIT.definition.identifier, TOKYO_CITY_CIRCUIT],
 ]);
 
 export const getTrackConfiguration = (

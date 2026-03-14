@@ -1,5 +1,5 @@
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Sky } from "@react-three/drei";
+import { Sky, Stars } from "@react-three/drei";
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import * as THREE from "three";
 import { Car } from "./Car";
@@ -27,13 +27,12 @@ import {
 import type { TrackIdentifier } from "./tracks";
 
 const AI_COLORS: string[] = []; // No AI cars
-const TRACK_WIDTH = 20;
 const LAP_OPTIONS = [3, 5, 7, 10];
 const CAR_COLORS = [
   { label: "Red", value: "#ff2d2d", preview: "#e63946" },
   { label: "Orange", value: "#ffa500", preview: "#ff8c00" },
   { label: "Blue", value: "#4d8fff", preview: "#2563eb" },
-  { label: "White", value: "#ffffff", preview: "#f0f0f0" },
+  { label: "Black", value: "#1a1a1a", preview: "#222222" },
 ];
 
 const formatTime = (seconds: number) => {
@@ -53,18 +52,19 @@ const FollowCamera = ({
   const { camera } = useThree();
   const smoothPos = useRef(new THREE.Vector3(0, 15, -20));
   const smoothLook = useRef(new THREE.Vector3(0, 0, 0));
+  const idealOffset = useRef(new THREE.Vector3());
 
   useFrame(() => {
     if (!playerPos) return;
 
-    const idealOffset = new THREE.Vector3(
+    idealOffset.current.set(
       -Math.sin(playerRot) * 12,
       6,
       -Math.cos(playerRot) * 12,
     );
-    idealOffset.add(playerPos);
+    idealOffset.current.add(playerPos);
 
-    smoothPos.current.lerp(idealOffset, 0.06);
+    smoothPos.current.lerp(idealOffset.current, 0.06);
     smoothLook.current.lerp(playerPos, 0.12);
 
     camera.position.copy(smoothPos.current);
@@ -310,6 +310,7 @@ export const RacingGame = () => {
           if (newLap > (totalLaps || 10)) {
             setRaceFinished(true);
             soundEngine.stopEngine();
+            soundEngine.setMasterVolume(0);
           }
           return newLap;
         });
@@ -394,6 +395,33 @@ export const RacingGame = () => {
             mieDirectionalG={0.8}
           />
 
+          {trackContextValue.configuration.environment.sky.inclination <
+            0.1 && (
+            <>
+              <Stars
+                radius={300}
+                depth={60}
+                count={3000}
+                factor={4}
+                saturation={0}
+                fade
+                speed={1.5}
+              />
+              {/* Moon */}
+              <mesh position={[-150, 180, -250]}>
+                <sphereGeometry args={[30, 32, 32]} />
+                <meshBasicMaterial color="#ffffee" />
+              </mesh>
+              <pointLight
+                position={[-150, 180, -250]}
+                color="#ccddff"
+                intensity={8}
+                distance={800}
+                decay={1}
+              />
+            </>
+          )}
+
           <ambientLight
             intensity={
               trackContextValue.configuration.environment.lighting
@@ -423,7 +451,7 @@ export const RacingGame = () => {
             shadow-camera-right={250}
             shadow-camera-top={250}
             shadow-camera-bottom={-250}
-            shadow-bias={-0.0005}
+            shadow-bias={-0.003}
           />
           <hemisphereLight
             args={
@@ -432,7 +460,9 @@ export const RacingGame = () => {
             }
           />
 
-          <Track width={TRACK_WIDTH} />
+          <Track
+            width={trackContextValue.configuration.definition.trackWidth}
+          />
           <TrackSpectators />
           <SkidMarks ref={skidMarksRef} />
 
@@ -456,7 +486,7 @@ export const RacingGame = () => {
             onPositionUpdate={handlePositionUpdate}
             onSkidmarkUpdate={handleSkidmarkUpdate}
             otherCars={carPositions}
-            trackWidth={TRACK_WIDTH}
+            trackWidth={trackContextValue.configuration.definition.trackWidth}
             raceStarted={raceStarted && !raceFinished}
           />
 
@@ -478,7 +508,7 @@ export const RacingGame = () => {
               aiIndex={index}
               onPositionUpdate={handlePositionUpdate}
               otherCars={carPositions}
-              trackWidth={TRACK_WIDTH}
+              trackWidth={trackContextValue.configuration.definition.trackWidth}
               raceStarted={raceStarted && !raceFinished}
               playerProgress={playerProgress}
             />
@@ -540,6 +570,92 @@ export const RacingGame = () => {
                 </div>
               </div>
 
+              {/* Track selection */}
+              <div className="flex flex-col items-center gap-3 w-full">
+                <p className="text-base text-muted-foreground tracking-wide">
+                  Track
+                </p>
+                <div className="flex gap-4 justify-center flex-wrap">
+                  {listTrackConfigurations().map((track) => {
+                    const definition = track.definition;
+                    const isSelected = selectedTrack === definition.identifier;
+                    const points = definition.controlPoints;
+                    const minX = Math.min(...points.map((p) => p[0]));
+                    const maxX = Math.max(...points.map((p) => p[0]));
+                    const minZ = Math.min(...points.map((p) => p[1]));
+                    const maxZ = Math.max(...points.map((p) => p[1]));
+                    const svgSize = 80;
+                    const padding = 8;
+                    const scale =
+                      (svgSize - padding * 2) /
+                      Math.max(maxX - minX || 1, maxZ - minZ || 1);
+                    const svgPoints = points
+                      .map(
+                        (p) =>
+                          `${padding + (p[0] - minX) * scale},${padding + (p[1] - minZ) * scale}`,
+                      )
+                      .join(" ");
+
+                    return (
+                      <button
+                        key={definition.identifier}
+                        onClick={() => setSelectedTrack(definition.identifier)}
+                        className={`flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all pointer-events-auto w-36 ${
+                          isSelected
+                            ? "border-primary scale-105 shadow-lg"
+                            : "border-border hover:border-primary/50"
+                        }`}
+                        style={{
+                          backgroundColor: isSelected
+                            ? `${definition.previewColor}15`
+                            : undefined,
+                        }}
+                      >
+                        <svg
+                          width={svgSize}
+                          height={svgSize}
+                          viewBox={`0 0 ${svgSize} ${svgSize}`}
+                        >
+                          <polyline
+                            points={svgPoints}
+                            fill="none"
+                            stroke={
+                              isSelected ? definition.previewColor : "#888888"
+                            }
+                            strokeWidth={2.5}
+                            strokeLinejoin="round"
+                            strokeLinecap="round"
+                          />
+                          <line
+                            x1={
+                              padding +
+                              (points[points.length - 1][0] - minX) * scale
+                            }
+                            y1={
+                              padding +
+                              (points[points.length - 1][1] - minZ) * scale
+                            }
+                            x2={padding + (points[0][0] - minX) * scale}
+                            y2={padding + (points[0][1] - minZ) * scale}
+                            stroke={
+                              isSelected ? definition.previewColor : "#888888"
+                            }
+                            strokeWidth={2.5}
+                            strokeLinecap="round"
+                          />
+                        </svg>
+                        <span className="text-sm font-bold text-foreground leading-tight text-center">
+                          {definition.displayName}
+                        </span>
+                        <span className="text-xs text-muted-foreground leading-tight text-center line-clamp-2">
+                          {definition.description}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
               {/* Sound toggle */}
               <button
                 onClick={() => setSoundEnabled(!soundEnabled)}
@@ -563,7 +679,7 @@ export const RacingGame = () => {
                 🏁 Race Start
               </button>
 
-              <Leaderboard />
+              <Leaderboard trackId={selectedTrack} />
             </div>
           </div>
         )}
@@ -586,7 +702,7 @@ export const RacingGame = () => {
         <Minimap
           carPositions={carPositions}
           playerPosition={playerPosition}
-          trackWidth={TRACK_WIDTH}
+          trackWidth={trackContextValue.configuration.definition.trackWidth}
           playerColor={playerColor}
         />
 
@@ -674,6 +790,7 @@ export const RacingGame = () => {
                 <SubmitScore
                   bestLapTime={Math.min(...lapTimes)}
                   totalLaps={totalLaps || 3}
+                  trackId={selectedTrack}
                   onSubmitted={() => {}}
                 />
               </div>
