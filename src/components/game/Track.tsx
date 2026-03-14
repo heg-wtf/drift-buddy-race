@@ -420,7 +420,13 @@ const TrackLights = ({
 }) => {
   const lights = useMemo(() => {
     const result: { position: THREE.Vector3; direction: THREE.Vector3 }[] = [];
-    for (let i = 0; i < centerPoints.length; i += LIGHT_STEP) {
+    // Skip lights near start/finish line to avoid track invasion
+    const skipStart = LIGHT_STEP * 2;
+    for (
+      let i = skipStart;
+      i < centerPoints.length - skipStart;
+      i += LIGHT_STEP
+    ) {
       const point = centerPoints[i];
       const next = centerPoints[(i + 1) % centerPoints.length];
       const tangent = new THREE.Vector3().subVectors(next, point).normalize();
